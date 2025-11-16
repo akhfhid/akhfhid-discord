@@ -315,4 +315,122 @@ const scheduledJob = cron.schedule('0 30 7 * * *', sendScheduledMessage, {
 
 scheduledJob.start();
 console.log('✅ Cron job untuk pesan harian (07:30) telah diaktifkan');
+
+// Handler untuk interaksi button
+client.on('interactionCreate', async (interaction) => {
+    if (!interaction.isButton()) return;
+
+    const customId = interaction.customId;
+    if (!customId.includes('_')) return;
+
+    const [, type, messageId] = customId.split('_');
+    const userData = stalkerData.get(messageId);
+
+    if (!userData) {
+        return await interaction.reply({ content: 'Data tidak ditemukan!', ephemeral: true });
+    }
+
+    try {
+        switch (type) {
+            case 'profile':
+                const profileEmbed = new EmbedBuilder()
+                    .setColor('#0099FF')
+                    .setTitle(`👤 Profil Lengkap: ${userData.basic.name}`)
+                    .setDescription(userData.basic.description || 'Tidak ada deskripsi')
+                    .addFields(
+                        { name: '🆔 ID Pengguna', value: userData.basic.id, inline: true },
+                        { name: '📅 Dibuat', value: new Date(userData.basic.created).toLocaleDateString('id-ID'), inline: true },
+                        { name: '🎮 Status', value: userData.status ? userData.status.userPresences[0]?.userPresenceType === 0 ? '🟢 Online' : '🔴 Offline' : '❓ Tidak Diketahui', inline: true },
+                        { name: '🛡️ Terverifikasi', value: userData.basic.hasVerifiedBadge ? '✅ Ya' : '❌ Tidak', inline: true }
+                    )
+                    .setFooter({ text: `Dilihat oleh ${interaction.user.tag}` })
+                    .setTimestamp();
+
+                // Tambahkan avatar jika ada
+                if (userData.avatar && userData.avatar.headshot && userData.avatar.fullBody &&
+                    typeof userData.avatar.headshot.data === 'string' &&
+                    typeof userData.avatar.fullBody.data === 'string') {
+
+                    profileEmbed.setImage(userData.avatar.headshot.data);
+                }
+
+                await interaction.update({ embeds: [profileEmbed], components: [] });
+                break;
+
+            case 'avatar':
+                const avatarEmbed = new EmbedBuilder()
+                    .setColor('#0099FF')
+                    .setTitle(`🖼️ Avatar: ${userData.basic.name}`)
+                    .setDescription(`Avatar untuk pengguna ${userData.basic.name}`)
+                    .setTimestamp();
+
+                // Tambahkan gambar dengan validasi
+                if (userData.avatar && userData.avatar.headshot && userData.avatar.fullBody &&
+                    typeof userData.avatar.headshot.data === 'string' &&
+                    typeof userData.avatar.fullBody.data === 'string') {
+
+                    if (userData.avatar.headshot.data) {
+                        avatarEmbed.addFields(
+                            { name: '📷 Headshot', value: `[Lihat](${userData.avatar.headshot.data})`, inline: true }
+                        );
+                    }
+
+                    if (userData.avatar.fullBody.data) {
+                        avatarEmbed.addFields(
+                            { name: '👤 Full Body', value: `[Lihat](${userData.avatar.fullBody.data})`, inline: true }
+                        );
+                    }
+                }
+
+                await interaction.update({ embeds: [avatarEmbed], components: [] });
+                break;
+
+            case 'games':
+                const gamesEmbed = new EmbedBuilder()
+                    .setColor('#0099FF')
+                    .setTitle(`🎮 Game: ${userData.basic.name}`)
+                    .setDescription(userData.games.favorites ?
+                        userData.games.favorites.map((game, index) =>
+                            `${index + 1}. ${game.name || 'Game Tanpa Nama'}`
+                        ).join('\n') : 'Tidak ada game favorit')
+                    .setTimestamp();
+
+                await interaction.update({ embeds: [gamesEmbed], components: [] });
+                break;
+
+            case 'social':
+                const socialEmbed = new EmbedBuilder()
+                    .setColor('#0099FF')
+                    .setTitle(`🌐 Social: ${userData.basic.name}`)
+                    .addFields(
+                        { name: '👥 Teman', value: userData.social.friends?.count || '0', inline: true },
+                        { name: '👥 Pengikut', value: userData.social.followers?.count || '0', inline: true },
+                        { name: '👥 Diikuti', value: userData.social.following?.count || '0', inline: true }
+                    )
+                    .setTimestamp();
+
+                await interaction.update({ embeds: [socialEmbed], components: [] });
+                break;
+
+            case 'stats':
+                const statsEmbed = new EmbedBuilder()
+                    .setColor('#0099FF')
+                    .setTitle(`📊 Statistik: ${userData.basic.name}`)
+                    .addFields(
+                        { name: '👥 Teman', value: userData.social.friends?.count || '0', inline: true },
+                        { name: '👥 Pengikut', value: userData.social.followers?.count || '0', inline: true },
+                        { name: '👥 Diikuti', value: userData.social.following?.count || '0', inline: true }
+                    )
+                    .setTimestamp();
+
+                await interaction.update({ embeds: [statsEmbed], components: [] });
+                break;
+
+            // ... (case lainnya tetap sama)
+        }
+    } catch (error) {
+        console.error(error);
+        await interaction.reply({ content: 'Terjadi kesalahan saat menampilkan detail!', ephemeral: true });
+    }
+});
 client.login(process.env.TOKEN);
