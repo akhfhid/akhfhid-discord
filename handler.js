@@ -1,4 +1,3 @@
-// handler.js
 const fs = require("fs");
 const path = require("path");
 const chokidar = require('chokidar');
@@ -7,34 +6,26 @@ module.exports = (client) => {
     const pluginDir = path.join(__dirname, "plugins");
 
     const loadPlugins = () => {
-        // Clear existing commands and aliases
         client.commands.clear();
         client.aliases.clear();
-
-        // Pastikan direktori plugins ada
         if (!fs.existsSync(pluginDir)) {
             console.log("Direktori plugins tidak ditemukan, membuat direktori baru...");
             fs.mkdirSync(pluginDir);
             return;
         }
-
         const files = fs.readdirSync(pluginDir).filter(f => f.endsWith(".js"));
-
         if (files.length === 0) {
             console.log("Tidak ada plugin yang ditemukan di direktori plugins");
             return;
         }
-
         console.log(`Memuat ${files.length} plugin...`);
 
         files.forEach((file) => {
             try {
-                // Clear cache to force reload
                 delete require.cache[require.resolve(`./plugins/${file}`)];
 
                 const plugin = require(`./plugins/${file}`);
 
-                // Validasi plugin
                 if (!plugin.name || !plugin.run) {
                     console.log(`✖ Plugin ${file} tidak valid (membutuhkan properti name dan run)`);
                     return;
@@ -55,16 +46,13 @@ module.exports = (client) => {
         console.log(`Total plugin yang dimuat: ${client.commands.size}`);
     };
 
-    // Muat plugin awal
     loadPlugins();
 
-    // Pantau perubahan di direktori plugins
     const watcher = chokidar.watch(pluginDir, {
         ignored: /(^|[\/\\])\../, // ignore dotfiles
         persistent: true
     });
 
-    // Event saat file diubah
     watcher.on('change', (filepath) => {
         const filename = path.basename(filepath);
         if (filename.endsWith('.js')) {
@@ -73,7 +61,6 @@ module.exports = (client) => {
         }
     });
 
-    // Event saat file baru ditambahkan
     watcher.on('add', (filepath) => {
         const filename = path.basename(filepath);
         if (filename.endsWith('.js')) {
