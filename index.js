@@ -2,6 +2,7 @@ require("dotenv").config();
 const { Client, EmbedBuilder, GatewayIntentBits, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require("discord.js");
 const { DisTube } = require("distube");
 const fs = require('fs');
+const cron = require('node-cron');
 const path = require('path');
 const handler = require("./handler");
 const dataDir = path.join(__dirname, 'data');
@@ -266,4 +267,52 @@ client.on('interactionCreate', async (interaction) => {
         await interaction.reply({ content: 'Terjadi kesalahan saat menampilkan detail!', ephemeral: true });
     }
 });
+const schedulePath = path.join(__dirname, 'data/schedules.json');
+let schedules = {};
+const configPath = path.join(__dirname, 'data/scheduleConfig.json');
+let scheduleConfig = {};
+if (fs.existsSync(configPath)) {
+    scheduleConfig = JSON.parse(fs.readFileSync(configPath, 'utf8'));
+}
+
+// Fungsi untuk mengirim pesan jadwal
+async function sendScheduledMessage() {
+    console.log(`[${new Date().toLocaleString()}] Mengecek jadwal harian...`);
+
+    for (const [guildId, config] of Object.entries(scheduleConfig)) {
+        if (!config.enabled) continue;
+
+        const guild = client.guilds.cache.get(guildId);
+        if (!guild) continue;
+
+        const channel = guild.channels.cache.get(config.channelId);
+        if (!channel) continue;
+
+        // Pesan dan waktu HARDCODE di sini
+        const dayNames = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
+        const now = new Date();
+        const dayName = dayNames[now.getDay()];
+        const dateStr = now.toLocaleDateString('id-ID');
+        const timeStr = now.toLocaleTimeString('id-ID');
+
+        // Pesan yang bisa diedit di sini
+        const messageTemplate = `🌅 **Pesan Pagi Harian**\nSelamat pagi warga ${guild.name}! ☀️\nHari ${dayName}, ${dateStr} pukul ${timeStr}.\n\nSemoga hari ini penuh berkah dan produktif. Jangan lupa bahagia dan tetap semangat! 🎉\n\n_Bot Discord oleh {bot-creator-name}_`;
+
+        try {
+            await channel.send(messageTemplate);
+            console.log(`✅ Pesan jadwal terkirim ke server: ${guild.name} (${guildId})`);
+        } catch (error) {
+            console.error(`❌ Gagal mengirim pesan ke server ${guild.name}:`, error);
+        }
+    }
+}
+
+// Buat cron job untuk setiap hari pukul 07:30
+const scheduledJob = cron.schedule('0 30 7 * * *', sendScheduledMessage, {
+    scheduled: true,
+    timezone: "Asia/Jakarta"
+});
+
+scheduledJob.start();
+console.log('✅ Cron job untuk pesan harian (07:30) telah diaktifkan');
 client.login(process.env.TOKEN);
