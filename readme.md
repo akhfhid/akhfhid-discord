@@ -1,9 +1,8 @@
 # Bot Discord by akhfhid
 
-A Discord bot project developed and maintained by **Affan Khulafa Hidayah (akhfhid)**.
-Portfolio: [https://akhfhid.my.id](https://akhfhid.my.id)
+A powerful and modular Discord bot built and maintained by **Affan Khulafa Hidayah (akhfhid)**.
+Portfolio: <a href="https://akhfhid.my.id" target="_blank"><strong>akhfhid.my.id</strong></a>
 
-A Discord bot built with Node.js and Discord.js v14.
 <p align="center">
   <img src="https://img.shields.io/badge/Node-%3E%3D18.0.0-339933?logo=node.js" />
   <img src="https://img.shields.io/badge/Discord.js-v14-5865F2?logo=discord" />
@@ -12,6 +11,13 @@ A Discord bot built with Node.js and Discord.js v14.
   </a>
 </p>
 
+A full-featured Discord bot built using **Node.js** and **Discord.js v14**, designed with a clean architecture and scalability in mind.
+
+> **Note:**
+> This project currently **does not support Linux environments** due to OS-specific modules used during development.
+> Supported platform: **Windows only**.
+
+---
 
 ## Installation
 
@@ -28,83 +34,79 @@ cd akhfhid-bot-dc
 npm install
 ```
 
-This command automatically installs every package listed in `package.json`. You do not need to install each dependency manually.
-
 3. Create a `.env` file:
 
 ```
 TOKEN=your_discord_bot_token
 CLIENT_ID=your_application_client_id
 GUILD_ID=your_guild_id
-```
-
-4. Start the bot:
-
-```bash
-node index.js
+PREFIX=!
 ```
 
 ---
 
 ## Features
 
-* Modern Discord.js v14 architecture
-* Automatic command loading
-* Music playback using DisTube and play-dl
+* Modern **Discord.js v14** architecture
+* Automatic command loader
+* **AI Features** (ChatGPT + Perplexity API integration)
+* Music playback using DisTube + play-dl
 * YouTube search and streaming
-* Translation support via Google Translate API
+* Google Translate support
 * Environment-based configuration with dotenv
-* File watching and auto-reload using chokidar
-* Scheduled tasks using node-cron
-* Logging and terminal styling using chalk
+* Auto-reload using chokidar
+* Scheduled jobs with node-cron
+* Clean logging using chalk
 
 ---
 
-# How to Create a Discord Bot (English Guide)
+# How to Create a Discord Bot
 
 ## 1. Create a Discord Application
 
-1. Open the Discord Developer Portal: [https://discord.com/developers/applications](https://discord.com/developers/applications)
-2. Click "New Application".
-3. Enter the application name and confirm.
+1. Go to: [https://discord.com/developers/applications](https://discord.com/developers/applications)
+2. Click **New Application**
+3. Enter any application name
 
 ## 2. Create a Bot User
 
-1. Open your application.
-2. Go to the "Bot" tab in the left sidebar.
-3. Click "Add Bot".
-4. Click "Reset Token" to generate your bot token.
-5. Copy the token and place it in your `.env` file as `TOKEN`.
+1. Open the **Bot** tab
+2. Click **Add Bot**
+3. Click **Reset Token** to generate your bot token
+4. Insert the token into your `.env` file as `TOKEN`
 
 ## 3. Enable Privileged Gateway Intents
 
-1. Stay inside the "Bot" tab.
-2. Scroll down to the "Privileged Gateway Intents" section.
-3. Enable:
+Inside the **Bot** settings, enable:
 
-   * Presence Intent
-   * Server Members Intent
-   * Message Content Intent
+* Presence Intent
+* Server Members Intent
+* Message Content Intent
 
 ## 4. Invite the Bot to Your Server
 
-1. Go to the "OAuth2" tab.
-2. Select "URL Generator".
-3. Under "Scopes", check `bot`.
-4. Under "Bot Permissions", select the permissions your bot needs.
-5. Copy the generated URL.
-6. Open the URL in your browser and invite the bot to your server.
+1. Open **OAuth2 → URL Generator**
+2. Under *Scopes*, select `bot`
+3. Choose the permissions your bot needs
+4. Copy and open the generated URL to invite the bot
 
 ## 5. Run the Bot
 
-Make sure your `.env` file has all required values.
-
-Then run:
+1. Make sure dependencies are installed and `.env` is configured.
+2. Start the bot:
 
 ```bash
 node index.js
 ```
 
-The bot should now be online.
+3. Test if the bot is working using the built-in ping command:
+
+```bash
+!ping
+```
+
+If the bot responds with `Pong!`, everything is working correctly.
+
+---
 
 If you need additional setup guidance or want to add command examples, feel free to ask.
