@@ -1,6 +1,6 @@
 # bot-discord by akhfhid
 
-A professional Discord bot project developed and maintained by **Affan Khulafa Hidayah (akhfhid)**.
+A Discord bot project developed and maintained by **Affan Khulafa Hidayah (akhfhid)**.
 Portfolio: [https://akhfhid.my.id](https://akhfhid.my.id)
 
 A Discord bot built with Node.js and Discord.js v14.
