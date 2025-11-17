@@ -4,7 +4,7 @@ const akhfhid = process.env.BASE_API;
 module.exports = {
     name: "ai",
     alias: ["gpt", "chat"],
-    description: "Berinteraksi dengan AI GPT-5 Nano",
+    description: "Chat with Akhfhid AI",
 
     run: async (client, message, args) => {
         if (!args.length) {
