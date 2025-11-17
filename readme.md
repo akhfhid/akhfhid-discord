@@ -4,13 +4,21 @@ A Discord bot project developed and maintained by **Affan Khulafa Hidayah (akhfh
 Portfolio: [https://akhfhid.my.id](https://akhfhid.my.id)
 
 A Discord bot built with Node.js and Discord.js v14.
+<p align="center">
+  <img src="https://img.shields.io/badge/Node-%3E%3D18.0.0-339933?logo=node.js" />
+  <img src="https://img.shields.io/badge/Discord.js-v14-5865F2?logo=discord" />
+  <a href="https://www.gnu.org/licenses/gpl-3.0">
+    <img src="https://img.shields.io/badge/License-GPL%20v3-yellow.svg" />
+  </a>
+</p>
+
 
 ## Installation
 
 1. Clone this repository:
 
 ```bash
-git clone https://github.com/your/repo.git
+git clone https://github.com/akhfhid/akhfhid-discord.git
 cd akhfhid-bot-dc
 ```
 
@@ -98,7 +106,5 @@ node index.js
 ```
 
 The bot should now be online.
-
----
 
 If you need additional setup guidance or want to add command examples, feel free to ask.
