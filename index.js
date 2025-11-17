@@ -5,6 +5,7 @@ const fs = require('fs');
 const cron = require('node-cron');
 const path = require('path');
 const handler = require("./handler");
+const levelDataPath = path.join(__dirname, 'data/levels.json');
 
 const dataDir = path.join(__dirname, 'data');
 if (!fs.existsSync(dataDir)) {
@@ -194,6 +195,75 @@ client.on('interactionCreate', async (interaction) => {
                 });
             }
 
+            function loadLevelData() {
+                if (!fs.existsSync(levelDataPath)) {
+                    fs.writeFileSync(levelDataPath, '{}', 'utf8');
+                    return {};
+                }
+                try {
+                    return JSON.parse(fs.readFileSync(levelDataPath, 'utf8'));
+                } catch (error) {
+                    console.error('Gagal memuat data level, membuat file baru...', error);
+                    fs.writeFileSync(levelDataPath, '{}', 'utf8');
+                    return {};
+                }
+            }
+
+            function saveLevelData(data) {
+                fs.writeFileSync(levelDataPath, JSON.stringify(data, null, 2), 'utf8');
+            }
+
+            client.on("messageCreate", async (message) => {
+                if (message.author.bot) return;
+                if (message.guild) {
+                    const levelData = loadLevelData();
+                    const guildId = message.guild.id;
+                    const userId = message.author.id;
+
+                    if (!levelData[guildId]) {
+                        levelData[guildId] = {};
+                    }
+
+                    if (!levelData[guildId][userId]) {
+                        levelData[guildId][userId] = {
+                            xp: 0,
+                            level: 0,
+                            lastMessage: 0
+                        };
+                    }
+
+                    const user = levelData[guildId][userId];
+                    const now = Date.now();
+                    const cooldown = 600; 
+
+                    if (now - user.lastMessage > cooldown) {
+                        const xpToGive = Math.floor(Math.random() * 11) + 15; 
+                        user.xp += xpToGive;
+                        user.lastMessage = now;
+
+                        const xpForNextLevel = 50 * Math.pow(user.level + 1, 2) + (50 * (user.level + 1)) + 100;
+
+                        if (user.xp >= xpForNextLevel) {
+                            user.level += 1;
+                            user.xp = user.xp - xpForNextLevel;
+
+                            const levelUpEmbed = new EmbedBuilder()
+                                .setColor('#FFD700') 
+                                .setTitle(`🎉 LEVEL UP!`)
+                                .setDescription(`Selamat ${message.author.toString()}! Anda sekarang telah mencapai **Level ${user.level}**!`)
+                                .setThumbnail(message.author.displayAvatarURL({ dynamic: true }))
+                                .setTimestamp();
+
+                            await message.channel.send({ embeds: [levelUpEmbed] });
+                        }
+
+                        saveLevelData(levelData);
+                    }
+                }
+
+                console.log(`XP: ${user.xp}, Level: ${user.level}`);
+                const prefix = process.env.PREFIX || "!";
+            });
             const backButton = new ActionRowBuilder()
                 .addComponents(
                     new ButtonBuilder()
