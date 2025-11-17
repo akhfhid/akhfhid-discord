@@ -1,14 +1,16 @@
 require("dotenv").config();
-const { Client, EmbedBuilder, GatewayIntentBits, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require("discord.js");
+const { Client, EmbedBuilder, GatewayIntentBits, ActionRowBuilder, ButtonBuilder, ButtonStyle, StringSelectMenuBuilder } = require("discord.js");
 const { DisTube } = require("distube");
 const fs = require('fs');
 const cron = require('node-cron');
 const path = require('path');
 const handler = require("./handler");
+
 const dataDir = path.join(__dirname, 'data');
 if (!fs.existsSync(dataDir)) {
     fs.mkdirSync(dataDir);
 }
+
 const client = new Client({
     intents: [
         GatewayIntentBits.Guilds,
@@ -21,6 +23,7 @@ const client = new Client({
 
 client.commands = new Map();
 client.aliases = new Map();
+require("./slashHandler")(client);
 
 try {
     client.distube = new DisTube(client, {
@@ -48,6 +51,7 @@ client.distube.on("error", (channel, e) => {
     console.error(`Error di channel ${channel.name}: ${e}`);
     channel.send("Terjadi kesalahan saat memutar lagu!");
 });
+
 const welcomeChannelsPath = path.join(__dirname, 'data/welcomeChannels.json');
 let welcomeChannels = {};
 if (fs.existsSync(welcomeChannelsPath)) {
@@ -59,10 +63,12 @@ for (const [guildId, channelId] of Object.entries(welcomeChannels)) {
     client.welcomeChannels.set(guildId, channelId);
 }
 
-client.on("clientReady", () => {
+client.on("clientReady", async () => {
     console.log(`Bot online sebagai ${client.user.tag}`);
     console.log(`Bot di ${client.guilds.cache.size} server`);
     console.log(`Welcome channels diatur untuk ${client.welcomeChannels.size} server`);
+    await client.loadSlash();
+    console.log("Slash commands berhasil dipush!");
 });
 
 client.on('guildMemberAdd', (member) => {
@@ -71,8 +77,9 @@ client.on('guildMemberAdd', (member) => {
 
     const welcomeChannel = member.guild.channels.cache.get(welcomeChannelId);
     if (!welcomeChannel) return;
+
     let commandList = '';
-    const maxCommandsToShow = 10; 
+    const maxCommandsToShow = 10;
     let commandCount = 0;
     const sortedCommands = Array.from(client.commands.values()).sort((a, b) => a.name.localeCompare(b.name));
 
@@ -100,7 +107,7 @@ client.on('guildMemberAdd', (member) => {
                 value: commandList || 'No commands available.'
             }
         )
-        .setImage(member.guild.bannerURL({ size: 2048 })) // Clean high-res banner
+        .setImage(member.guild.bannerURL({ size: 2048 }))
         .setFooter({ text: `You are member number ${member.guild.memberCount}!` })
         .setTimestamp();
 
@@ -109,7 +116,6 @@ client.on('guildMemberAdd', (member) => {
         embeds: [embed]
     });
 });
-
 
 const pluginWatcher = handler(client);
 
@@ -132,9 +138,10 @@ client.on("messageCreate", async (message) => {
     const args = message.content.slice(prefix.length).trim().split(/ +/);
     const cmd = args.shift().toLowerCase();
 
+    // PERBAIKAN DI SINI
     const command =
         client.commands.get(cmd) ||
-        client.aliases.get(cmd);
+        client.commands.get(client.aliases.get(cmd));
 
     if (!command) return;
 
@@ -145,128 +152,293 @@ client.on("messageCreate", async (message) => {
         message.reply("Terjadi kesalahan saat menjalankan command!");
     }
 });
+
 client.on('interactionCreate', async (interaction) => {
-    if (!interaction.isButton()) return;
-
-    const customId = interaction.customId;
-    if (!customId.startsWith('view_') && !customId.startsWith('download_')) return;
-
-    const [, type, messageId] = customId.split('_');
-    const researchData = client.researchData?.get(messageId);
-
-    if (!researchData || researchData.authorId !== interaction.user.id) {
-        await interaction.reply({ content: 'Anda tidak memiliki izin untuk menggunakan tombol ini!', ephemeral: true });
-        return;
-    }
-
-    client.on('interactionCreate', async (interaction) => {
-        if (!interaction.isButton()) return;
-
-        const customId = interaction.customId;
-        if (!customId.startsWith('view_') && !customId.startsWith('download_')) return;
-
-        const [, type, messageId] = customId.split('_');
-        const researchData = client.researchData?.get(messageId);
-
-        if (!researchData || researchData.authorId !== interaction.user.id) {
-            await interaction.reply({ content: 'Anda tidak memiliki izin untuk menggunakan tombol ini!', ephemeral: true });
-            return;
-        }
-
-        const { result } = researchData;
-
+    if (interaction.isChatInputCommand()) {
+        const cmd = client.slashCommands.get(interaction.commandName);
+        if (!cmd) return;
         try {
-            switch (type) {
-                case 'sources':
-                    const sourcesEmbed = new EmbedBuilder()
-                        .setColor('#0099FF')
-                        .setTitle('📄 Sumber Riset')
-                        .setDescription(result.source_urls.slice(0, 10).map((url, index) =>
-                            `${index + 1}. ${url}`
-                        ).join('\n'))
-                        .setFooter({ text: `Menampilkan 10 dari ${result.source_urls.length} sumber` })
-                        .setTimestamp();
-
-                    await interaction.update({ embeds: [sourcesEmbed], components: [] });
-                    break;
-
-                case 'images':
-                    const imagesEmbed = new EmbedBuilder()
-                        .setColor('#FF9900')
-                        .setTitle('🖼️ Gambar Riset')
-                        .setDescription('Gambar-gambar yang ditemukan selama riset:')
-                        .setImage(result.selected_images[0])
-                        .setTimestamp();
-
-                    await interaction.update({ embeds: [imagesEmbed], components: [] });
-                    break;
-
-                case 'files':
-                    const filesEmbed = new EmbedBuilder()
-                        .setColor('#00FF00')
-                        .setTitle('📥 File Riset')
-                        .setDescription('Pilih format file yang ingin diunduh:')
-                        .addFields(
-                            { name: '📄 PDF', value: `[Unduh](${result.files.pdf})`, inline: true },
-                            { name: '📝 DOCX', value: `[Unduh](${result.files.docx})`, inline: true },
-                            { name: '📄 Markdown', value: `[Unduh](${result.files.md})`, inline: true },
-                            { name: '📊 JSON', value: `[Unduh](${result.files.json})`, inline: true }
-                        )
-                        .setTimestamp();
-
-                    await interaction.update({ embeds: [filesEmbed], components: [] });
-                    break;
-            }
-        } catch (error) {
-            console.error(error);
-            await interaction.reply({ content: 'Terjadi kesalahan saat menampilkan detail!', ephemeral: true });
+            await cmd.execute(interaction);
+        } catch (err) {
+            console.error(err);
+            return interaction.reply({ content: "Terjadi error.", ephemeral: true });
         }
-    });
-});
-client.on('interactionCreate', async (interaction) => {
-    if (!interaction.isButton()) return;
+    } else if (interaction.isStringSelectMenu()) {
+        if (interaction.customId === 'help_menu_select') {
+            const selectedCommandName = interaction.values[0];
+            const command = interaction.client.commands.get(selectedCommandName);
 
-    const customId = interaction.customId;
-    if (!customId.startsWith('view_sources_')) return;
+            if (!command) {
+                await interaction.update({
+                    content: `Command \`${selectedCommandName}\` tidak ditemukan.`,
+                    components: [],
+                    embeds: []
+                });
+                return;
+            }
 
-    const [, messageId] = customId.split('_');
-    const researchData = client.researchData?.get(messageId);
+            const detailEmbed = new EmbedBuilder()
+                .setColor('#77B255')
+                .setTitle(`🔍 Detail Command: ${command.name}`)
+                .addFields(
+                    { name: '📝 Deskripsi', value: command.description || 'Tidak ada deskripsi.', inline: false },
+                    { name: '⚙️ Cara Pakai', value: `\`${process.env.PREFIX || '!'}${command.name}\``, inline: true }
+                )
+                .setTimestamp();
 
-    if (!researchData || researchData.authorId !== interaction.user.id) {
-        return await interaction.reply({ content: 'Anda tidak memiliki izin untuk menggunakan tombol ini!', ephemeral: true });
-    }
+            if (command.alias && command.alias.length > 0) {
+                detailEmbed.addFields({
+                    name: '🔗 Alias',
+                    value: command.alias.map(a => `\`${a}\``).join(', '),
+                    inline: true
+                });
+            }
 
-    const { result } = researchData;
+            const backButton = new ActionRowBuilder()
+                .addComponents(
+                    new ButtonBuilder()
+                        .setCustomId('help_back_button')
+                        .setLabel('← Kembali ke Daftar')
+                        .setStyle(ButtonStyle.Secondary)
+                );
 
-    try {
-        // Format hasil pencarian dengan baik
-        const sourcesEmbed = new EmbedBuilder()
-            .setColor('#0099FF')
-            .setTitle('📄 Sumber Lengkap Perplexity AI')
-            .setDescription(`Sumber untuk query: **${result.query}**`)
-            .setTimestamp();
-
-        result.response.search_results.slice(0, 10).forEach((source, index) => {
-            sourcesEmbed.addFields(
-                {
-                    name: `${index + 1}. ${source.name}`,
-                    value: `${source.snippet.substring(0, 100)}...\n[Link](${source.url})`
-                }
-            );
-        });
-
-        if (result.response.search_results.length > 10) {
-            sourcesEmbed.setFooter({
-                text: `Menampilkan 10 dari ${result.response.search_results.length} sumber total`
+            await interaction.update({
+                embeds: [detailEmbed],
+                components: [backButton]
             });
         }
+    } else if (interaction.isButton()) {
+        const customId = interaction.customId;
 
-        await interaction.update({ embeds: [sourcesEmbed], components: [] });
-    } catch (error) {
-        console.error(error);
-        await interaction.reply({ content: 'Terjadi kesalahan saat menampilkan detail!', ephemeral: true });
+        if (customId === 'help_back_button') {
+            const commands = Array.from(interaction.client.commands.values());
+            const options = commands.map(cmd => ({
+                label: cmd.name,
+                description: (cmd.description || 'Tidak ada deskripsi.').substring(0, 100),
+                value: cmd.name,
+                emoji: '🔧'
+            }));
+
+            const selectMenu = new StringSelectMenuBuilder()
+                .setCustomId('help_menu_select')
+                .setPlaceholder('Pilih sebuah command untuk melihat detailnya...')
+                .addOptions(options);
+
+            const actionRow = new ActionRowBuilder().addComponents(selectMenu);
+
+            const embed = new EmbedBuilder()
+                .setColor('#0099FF')
+                .setTitle('📚 Pusat Bantuan Command')
+                .setDescription(`Hai ${interaction.user.toString()}! Ada ${commands.length} command yang tersedia. Silakan pilih dari menu di bawah untuk melihat informasi lebih lanjut.`)
+                .setTimestamp();
+
+            await interaction.update({
+                embeds: [embed],
+                components: [actionRow]
+            });
+        } else if (customId.startsWith('view_') || customId.startsWith('download_')) {
+            const [, type, messageId] = customId.split('_');
+            const researchData = client.researchData?.get(messageId);
+
+            if (!researchData || researchData.authorId !== interaction.user.id) {
+                await interaction.reply({ content: 'Anda tidak memiliki izin untuk menggunakan tombol ini!', ephemeral: true });
+                return;
+            }
+
+            const { result } = researchData;
+
+            try {
+                switch (type) {
+                    case 'sources':
+                        const sourcesEmbed = new EmbedBuilder()
+                            .setColor('#0099FF')
+                            .setTitle('📄 Sumber Riset')
+                            .setDescription(result.source_urls.slice(0, 10).map((url, index) =>
+                                `${index + 1}. ${url}`
+                            ).join('\n'))
+                            .setFooter({ text: `Menampilkan 10 dari ${result.source_urls.length} sumber` })
+                            .setTimestamp();
+
+                        await interaction.update({ embeds: [sourcesEmbed], components: [] });
+                        break;
+
+                    case 'images':
+                        const imagesEmbed = new EmbedBuilder()
+                            .setColor('#FF9900')
+                            .setTitle('🖼️ Gambar Riset')
+                            .setDescription('Gambar-gambar yang ditemukan selama riset:')
+                            .setImage(result.selected_images[0])
+                            .setTimestamp();
+
+                        await interaction.update({ embeds: [imagesEmbed], components: [] });
+                        break;
+
+                    case 'files':
+                        const filesEmbed = new EmbedBuilder()
+                            .setColor('#00FF00')
+                            .setTitle('📥 File Riset')
+                            .setDescription('Pilih format file yang ingin diunduh:')
+                            .addFields(
+                                { name: '📄 PDF', value: `[Unduh](${result.files.pdf})`, inline: true },
+                                { name: '📝 DOCX', value: `[Unduh](${result.files.docx})`, inline: true },
+                                { name: '📄 Markdown', value: `[Unduh](${result.files.md})`, inline: true },
+                                { name: '📊 JSON', value: `[Unduh](${result.files.json})`, inline: true }
+                            )
+                            .setTimestamp();
+
+                        await interaction.update({ embeds: [filesEmbed], components: [] });
+                        break;
+                }
+            } catch (error) {
+                console.error(error);
+                await interaction.reply({ content: 'Terjadi kesalahan saat menampilkan detail!', ephemeral: true });
+            }
+        } else if (customId.startsWith('view_sources_')) {
+            const [, messageId] = customId.split('_');
+            const researchData = client.researchData?.get(messageId);
+
+            if (!researchData || researchData.authorId !== interaction.user.id) {
+                return await interaction.reply({ content: 'Anda tidak memiliki izin untuk menggunakan tombol ini!', ephemeral: true });
+            }
+
+            const { result } = researchData;
+
+            try {
+                const sourcesEmbed = new EmbedBuilder()
+                    .setColor('#0099FF')
+                    .setTitle('📄 Sumber Lengkap Perplexity AI')
+                    .setDescription(`Sumber untuk query: **${result.query}**`)
+                    .setTimestamp();
+
+                result.response.search_results.slice(0, 10).forEach((source, index) => {
+                    sourcesEmbed.addFields(
+                        {
+                            name: `${index + 1}. ${source.name}`,
+                            value: `${source.snippet.substring(0, 100)}...\n[Link](${source.url})`
+                        }
+                    );
+                });
+
+                if (result.response.search_results.length > 10) {
+                    sourcesEmbed.setFooter({
+                        text: `Menampilkan 10 dari ${result.response.search_results.length} sumber total`
+                    });
+                }
+
+                await interaction.update({ embeds: [sourcesEmbed], components: [] });
+            } catch (error) {
+                console.error(error);
+                await interaction.reply({ content: 'Terjadi kesalahan saat menampilkan detail!', ephemeral: true });
+            }
+        } else if (customId.includes('_')) {
+            const [, type, messageId] = customId.split('_');
+            const userData = stalkerData.get(messageId);
+
+            if (!userData) {
+                return await interaction.reply({ content: 'Data tidak ditemukan!', ephemeral: true });
+            }
+
+            try {
+                switch (type) {
+                    case 'profile':
+                        const profileEmbed = new EmbedBuilder()
+                            .setColor('#0099FF')
+                            .setTitle(`👤 Profil Lengkap: ${userData.basic.name}`)
+                            .setDescription(userData.basic.description || 'Tidak ada deskripsi')
+                            .addFields(
+                                { name: '🆔 ID Pengguna', value: userData.basic.id, inline: true },
+                                { name: '📅 Dibuat', value: new Date(userData.basic.created).toLocaleDateString('id-ID'), inline: true },
+                                { name: '🎮 Status', value: userData.status ? userData.status.userPresences[0]?.userPresenceType === 0 ? '🟢 Online' : '🔴 Offline' : '❓ Tidak Diketahui', inline: true },
+                                { name: '🛡️ Terverifikasi', value: userData.basic.hasVerifiedBadge ? '✅ Ya' : '❌ Tidak', inline: true }
+                            )
+                            .setFooter({ text: `Dilihat oleh ${interaction.user.tag}` })
+                            .setTimestamp();
+
+                        if (userData.avatar && userData.avatar.headshot && userData.avatar.fullBody &&
+                            typeof userData.avatar.headshot.data === 'string' &&
+                            typeof userData.avatar.fullBody.data === 'string') {
+                            profileEmbed.setImage(userData.avatar.headshot.data);
+                        }
+
+                        await interaction.update({ embeds: [profileEmbed], components: [] });
+                        break;
+
+                    case 'avatar':
+                        const avatarEmbed = new EmbedBuilder()
+                            .setColor('#0099FF')
+                            .setTitle(`🖼️ Avatar: ${userData.basic.name}`)
+                            .setDescription(`Avatar untuk pengguna ${userData.basic.name}`)
+                            .setTimestamp();
+
+                        if (userData.avatar && userData.avatar.headshot && userData.avatar.fullBody &&
+                            typeof userData.avatar.headshot.data === 'string' &&
+                            typeof userData.avatar.fullBody.data === 'string') {
+
+                            if (userData.avatar.headshot.data) {
+                                avatarEmbed.addFields(
+                                    { name: '📷 Headshot', value: `[Lihat](${userData.avatar.headshot.data})`, inline: true }
+                                );
+                            }
+
+                            if (userData.avatar.fullBody.data) {
+                                avatarEmbed.addFields(
+                                    { name: '👤 Full Body', value: `[Lihat](${userData.avatar.fullBody.data})`, inline: true }
+                                );
+                            }
+                        }
+
+                        await interaction.update({ embeds: [avatarEmbed], components: [] });
+                        break;
+
+                    case 'games':
+                        const gamesEmbed = new EmbedBuilder()
+                            .setColor('#0099FF')
+                            .setTitle(`🎮 Game: ${userData.basic.name}`)
+                            .setDescription(userData.games.favorites ?
+                                userData.games.favorites.map((game, index) =>
+                                    `${index + 1}. ${game.name || 'Game Tanpa Nama'}`
+                                ).join('\n') : 'Tidak ada game favorit')
+                            .setTimestamp();
+
+                        await interaction.update({ embeds: [gamesEmbed], components: [] });
+                        break;
+
+                    case 'social':
+                        const socialEmbed = new EmbedBuilder()
+                            .setColor('#0099FF')
+                            .setTitle(`🌐 Social: ${userData.basic.name}`)
+                            .addFields(
+                                { name: '👥 Teman', value: userData.social.friends?.count || '0', inline: true },
+                                { name: '👥 Pengikut', value: userData.social.followers?.count || '0', inline: true },
+                                { name: '👥 Diikuti', value: userData.social.following?.count || '0', inline: true }
+                            )
+                            .setTimestamp();
+
+                        await interaction.update({ embeds: [socialEmbed], components: [] });
+                        break;
+
+                    case 'stats':
+                        const statsEmbed = new EmbedBuilder()
+                            .setColor('#0099FF')
+                            .setTitle(`📊 Statistik: ${userData.basic.name}`)
+                            .addFields(
+                                { name: '👥 Teman', value: userData.social.friends?.count || '0', inline: true },
+                                { name: '👥 Pengikut', value: userData.social.followers?.count || '0', inline: true },
+                                { name: '👥 Diikuti', value: userData.social.following?.count || '0', inline: true }
+                            )
+                            .setTimestamp();
+
+                        await interaction.update({ embeds: [statsEmbed], components: [] });
+                        break;
+                }
+            } catch (error) {
+                console.error(error);
+                await interaction.reply({ content: 'Terjadi kesalahan saat menampilkan detail!', ephemeral: true });
+            }
+        }
     }
 });
+
 const schedulePath = path.join(__dirname, 'data/schedules.json');
 let schedules = {};
 const configPath = path.join(__dirname, 'data/scheduleConfig.json');
@@ -275,7 +447,6 @@ if (fs.existsSync(configPath)) {
     scheduleConfig = JSON.parse(fs.readFileSync(configPath, 'utf8'));
 }
 
-// Fungsi untuk mengirim pesan jadwal
 async function sendScheduledMessage() {
     console.log(`[${new Date().toLocaleString()}] Mengecek jadwal harian...`);
 
@@ -288,15 +459,13 @@ async function sendScheduledMessage() {
         const channel = guild.channels.cache.get(config.channelId);
         if (!channel) continue;
 
-        // Pesan dan waktu HARDCODE di sini
         const dayNames = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
         const now = new Date();
         const dayName = dayNames[now.getDay()];
         const dateStr = now.toLocaleDateString('id-ID');
         const timeStr = now.toLocaleTimeString('id-ID');
 
-        // Pesan yang bisa diedit di sini
-        const messageTemplate = `🌅 **Pesan Pagi Harian**\nSelamat pagi warga ${guild.name}! ☀️\nHari ${dayName}, ${dateStr} pukul ${timeStr}.\n\nSemoga hari ini penuh berkah dan produktif. Jangan lupa bahagia dan tetap semangat! 🎉\n\n_Bot Discord oleh {bot-creator-name}_`;
+        const messageTemplate = `🌅 **Pesan Pagi Harian**\nSelamat pagi warga ${guild.name}! ☀️\nHari ${dayName}, ${dateStr} pukul ${timeStr}.\n\nSemoga hari ini penuh berkah dan produktif. Jangan lupa bahagia dan tetap semangat! 🎉`;
 
         try {
             await channel.send(messageTemplate);
@@ -307,130 +476,12 @@ async function sendScheduledMessage() {
     }
 }
 
-// Buat cron job untuk setiap hari pukul 07:30
 const scheduledJob = cron.schedule('0 30 7 * * *', sendScheduledMessage, {
     scheduled: true,
     timezone: "Asia/Jakarta"
 });
 
 scheduledJob.start();
-console.log('✅ Cron job untuk pesan harian (07:30) telah diaktifkan');
+console.log(' Cron job untuk pesan harian (07:30) telah diaktifkan');
 
-// Handler untuk interaksi button
-client.on('interactionCreate', async (interaction) => {
-    if (!interaction.isButton()) return;
-
-    const customId = interaction.customId;
-    if (!customId.includes('_')) return;
-
-    const [, type, messageId] = customId.split('_');
-    const userData = stalkerData.get(messageId);
-
-    if (!userData) {
-        return await interaction.reply({ content: 'Data tidak ditemukan!', ephemeral: true });
-    }
-
-    try {
-        switch (type) {
-            case 'profile':
-                const profileEmbed = new EmbedBuilder()
-                    .setColor('#0099FF')
-                    .setTitle(`👤 Profil Lengkap: ${userData.basic.name}`)
-                    .setDescription(userData.basic.description || 'Tidak ada deskripsi')
-                    .addFields(
-                        { name: '🆔 ID Pengguna', value: userData.basic.id, inline: true },
-                        { name: '📅 Dibuat', value: new Date(userData.basic.created).toLocaleDateString('id-ID'), inline: true },
-                        { name: '🎮 Status', value: userData.status ? userData.status.userPresences[0]?.userPresenceType === 0 ? '🟢 Online' : '🔴 Offline' : '❓ Tidak Diketahui', inline: true },
-                        { name: '🛡️ Terverifikasi', value: userData.basic.hasVerifiedBadge ? '✅ Ya' : '❌ Tidak', inline: true }
-                    )
-                    .setFooter({ text: `Dilihat oleh ${interaction.user.tag}` })
-                    .setTimestamp();
-
-                // Tambahkan avatar jika ada
-                if (userData.avatar && userData.avatar.headshot && userData.avatar.fullBody &&
-                    typeof userData.avatar.headshot.data === 'string' &&
-                    typeof userData.avatar.fullBody.data === 'string') {
-
-                    profileEmbed.setImage(userData.avatar.headshot.data);
-                }
-
-                await interaction.update({ embeds: [profileEmbed], components: [] });
-                break;
-
-            case 'avatar':
-                const avatarEmbed = new EmbedBuilder()
-                    .setColor('#0099FF')
-                    .setTitle(`🖼️ Avatar: ${userData.basic.name}`)
-                    .setDescription(`Avatar untuk pengguna ${userData.basic.name}`)
-                    .setTimestamp();
-
-                // Tambahkan gambar dengan validasi
-                if (userData.avatar && userData.avatar.headshot && userData.avatar.fullBody &&
-                    typeof userData.avatar.headshot.data === 'string' &&
-                    typeof userData.avatar.fullBody.data === 'string') {
-
-                    if (userData.avatar.headshot.data) {
-                        avatarEmbed.addFields(
-                            { name: '📷 Headshot', value: `[Lihat](${userData.avatar.headshot.data})`, inline: true }
-                        );
-                    }
-
-                    if (userData.avatar.fullBody.data) {
-                        avatarEmbed.addFields(
-                            { name: '👤 Full Body', value: `[Lihat](${userData.avatar.fullBody.data})`, inline: true }
-                        );
-                    }
-                }
-
-                await interaction.update({ embeds: [avatarEmbed], components: [] });
-                break;
-
-            case 'games':
-                const gamesEmbed = new EmbedBuilder()
-                    .setColor('#0099FF')
-                    .setTitle(`🎮 Game: ${userData.basic.name}`)
-                    .setDescription(userData.games.favorites ?
-                        userData.games.favorites.map((game, index) =>
-                            `${index + 1}. ${game.name || 'Game Tanpa Nama'}`
-                        ).join('\n') : 'Tidak ada game favorit')
-                    .setTimestamp();
-
-                await interaction.update({ embeds: [gamesEmbed], components: [] });
-                break;
-
-            case 'social':
-                const socialEmbed = new EmbedBuilder()
-                    .setColor('#0099FF')
-                    .setTitle(`🌐 Social: ${userData.basic.name}`)
-                    .addFields(
-                        { name: '👥 Teman', value: userData.social.friends?.count || '0', inline: true },
-                        { name: '👥 Pengikut', value: userData.social.followers?.count || '0', inline: true },
-                        { name: '👥 Diikuti', value: userData.social.following?.count || '0', inline: true }
-                    )
-                    .setTimestamp();
-
-                await interaction.update({ embeds: [socialEmbed], components: [] });
-                break;
-
-            case 'stats':
-                const statsEmbed = new EmbedBuilder()
-                    .setColor('#0099FF')
-                    .setTitle(`📊 Statistik: ${userData.basic.name}`)
-                    .addFields(
-                        { name: '👥 Teman', value: userData.social.friends?.count || '0', inline: true },
-                        { name: '👥 Pengikut', value: userData.social.followers?.count || '0', inline: true },
-                        { name: '👥 Diikuti', value: userData.social.following?.count || '0', inline: true }
-                    )
-                    .setTimestamp();
-
-                await interaction.update({ embeds: [statsEmbed], components: [] });
-                break;
-
-            // ... (case lainnya tetap sama)
-        }
-    } catch (error) {
-        console.error(error);
-        await interaction.reply({ content: 'Terjadi kesalahan saat menampilkan detail!', ephemeral: true });
-    }
-});
 client.login(process.env.TOKEN);

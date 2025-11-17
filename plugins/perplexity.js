@@ -20,6 +20,7 @@ module.exports = {
                 { name: '⏱️ Durasi', value: `0 detik`, inline: true },
                 { name: '📊 Status', value: `Menghubungi API...`, inline: true }
             )
+            .setTimestamp()
             .setFooter({ text: `Requested by ${message.author.tag}` });
 
         const loadingMsg = await message.channel.send({ embeds: [loadingEmbed] });
@@ -30,7 +31,9 @@ module.exports = {
                 .setFields(
                     { name: '⏱️ Durasi', value: `${seconds} detik`, inline: true },
                     { name: '📊 Status', value: `Memproses data...`, inline: true }
-                );
+                )
+                .setTimestamp()
+                .setFooter({ text: `Requested by ${message.author.tag}` });
             loadingMsg.edit({ embeds: [updated] }).catch(() => { });
         }, 1000);
 
@@ -64,8 +67,8 @@ module.exports = {
                     { name: "🔍 Related", value: result.related_queries.slice(0, 3).join("\n• ") || "-" },
                     { name: "⏱️ Durasi", value: `${seconds} detik`, inline: true }
                 )
-                .setTimestamp();
-                // .setFooter({ text: 'Requested by ' + (metadata.requestedBy + `ID: ${result.id}`|| 'User') });
+                .setTimestamp()
+                .setFooter({ text: 'Requested by ' + `${message.author.tag}` + `ID: ${result.id}`|| 'User' });
 
             await message.channel.send({ embeds: [mainEmbed] });
             const sources = result.response.search_results;
@@ -87,8 +90,8 @@ module.exports = {
                             return `**${start + i + 1}. ${s.name}**\n${s.snippet ? `> ${s.snippet}\n` : ""
                                 }[Open Link](${s.url})`;
                         }).join("\n\n")
-                    );
-                    // .setFooter({ text: 'Requested by ' + (metadata.requestedBy || 'User') });
+                    )
+                    .setFooter({ text: 'Requested by ' + `${message.author.tag}` || 'User' });
             };
 
             const getButtons = () => {
