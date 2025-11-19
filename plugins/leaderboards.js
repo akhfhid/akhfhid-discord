@@ -44,10 +44,10 @@ module.exports = {
 
         const leaderboardEmbed = new EmbedBuilder()
             .setColor('#FFD700')
-            .setTitle('🏆 Papan Peringkat Server')
+            .setTitle(`Leaderboard ${message.guild.name}`)
             .setDescription(description)
             .setThumbnail(message.guild.iconURL({ dynamic: true }))
-            .setFooter({ text: `Papan peringkat untuk ${message.guild.name}` })
+            .setFooter({ text: `Leaderboard ${message.guild.name}` })
             .setTimestamp();
 
         message.reply({ embeds: [leaderboardEmbed] });

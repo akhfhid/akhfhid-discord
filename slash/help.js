@@ -4,6 +4,7 @@ const { InteractionResponseFlags } = require('discord.js');
 module.exports = {
     data: new SlashCommandBuilder()
         .setName('help')
+
         .setDescription('Menampilkan daftar command yang tersedia'),
     async execute(interaction) {
         const commands = Array.from(interaction.client.commands.values());

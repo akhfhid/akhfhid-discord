@@ -15,21 +15,35 @@ module.exports = {
             .setTimestamp()
             .setFooter({ text: `Requested by ${message.author.tag}` });
 
-        let commandList = '';
+        let currentField = '';
+        let fieldCount = 1;
+
         sortedCommands.forEach(cmd => {
-            commandList += `**!${cmd.name}** — *${cmd.description || 'No description available'}*\n`;
-
+            let entry = `**!${cmd.name}** — *${cmd.description || 'No description available'}*\n`;
             if (cmd.alias && cmd.alias.length > 0) {
-                commandList += `   ➤ **Aliases:** ${cmd.alias.map(a => `\`${a}\``).join(', ')}\n`;
+                entry += `   ➤ **Alias cmd:** ${cmd.alias.map(a => `\`${a}\``).join(', ')}\n`;
             }
+            entry += '\n';
 
-            commandList += '\n';
+            // Discord limit is 1024, we use 900 to be safe
+            if (currentField.length + entry.length > 900) {
+                embed.addFields({
+                    name: `Commands (Part ${fieldCount})`,
+                    value: currentField
+                });
+                currentField = entry;
+                fieldCount++;
+            } else {
+                currentField += entry;
+            }
         });
 
-        embed.addFields({
-            name: `Total Commands (${client.commands.size})`,
-            value: commandList || 'No commands available.'
-        });
+        if (currentField.length > 0) {
+            embed.addFields({
+                name: fieldCount > 1 ? `Commands (Part ${fieldCount})` : `Total Commands (${client.commands.size})`,
+                value: currentField
+            });
+        }
 
         message.channel.send({ embeds: [embed] });
     }
