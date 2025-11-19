@@ -8,12 +8,11 @@ module.exports = {
         const { guild } = message;
 
         const embed = new EmbedBuilder()
-            .setColor('#1E1F22') // Dark premium
+            .setColor('#1E1F22')
             .setTitle(`🌐 ${guild.name}`)
             .setDescription(`A detailed overview of this server`)
             .setThumbnail(guild.iconURL({ dynamic: true, size: 1024 }))
 
-            // ─────────────────────
             .addFields(
                 {
                     name: '📅 Server Details',
@@ -25,7 +24,6 @@ module.exports = {
                 }
             )
 
-            // ─────────────────────
             .addFields(
                 {
                     name: '👥 Members & Structure',
@@ -37,7 +35,6 @@ module.exports = {
                 }
             )
 
-            // ─────────────────────
             .addFields(
                 {
                     name: '💎 Boost Information',
@@ -48,7 +45,6 @@ module.exports = {
                 }
             )
 
-            // Banner clean + centered
             .setImage(guild.bannerURL({ size: 2048 }))
             .setFooter({ text: `Server ID • ${guild.id}` })
             .setTimestamp();

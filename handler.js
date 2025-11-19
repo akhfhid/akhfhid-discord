@@ -3,15 +3,15 @@ const path = require("path");
 const chokidar = require('chokidar');
 
 const colors = {
-    green: (text) => `\x1b[32m${text}\x1b[0m`, 
-    red: (text) => `\x1b[31m${text}\x1b[0m`,   
+    green: (text) => `\x1b[32m${text}\x1b[0m`,
+    red: (text) => `\x1b[31m${text}\x1b[0m`,
     yellow: (text) => `\x1b[33m${text}\x1b[0m`,
     reset: () => `\x1b[0m`
 };
 
 module.exports = (client) => {
     const pluginDir = path.join(__dirname, "plugins");
-    const pluginMap = new Map(); 
+    const pluginMap = new Map();
     const loadPlugin = (filepath) => {
         try {
             delete require.cache[require.resolve(filepath)];
@@ -34,9 +34,6 @@ module.exports = (client) => {
                 plugin.alias.forEach((alias) => client.aliases.set(alias, plugin.name));
             }
             console.log(colors.green(`✔ Plugin dimuat: ${plugin.name}`));
-            // if (plugin.alias && plugin.alias.length > 0) {
-            //     console.log(colors.green(`  ✓ Alias: ${plugin.alias.join(", ")}`));
-            // }
 
         } catch (error) {
             console.error(colors.red(`Error saat memuat plugin ${path.basename(filepath)}:`), error);
@@ -87,7 +84,7 @@ module.exports = (client) => {
 
     loadAllPlugins();
     const watcher = chokidar.watch(pluginDir, {
-        ignored: /(^|[\/\\])\../, 
+        ignored: /(^|[\/\\])\../,
         persistent: true
     });
 

@@ -1,7 +1,6 @@
 const { EmbedBuilder } = require('discord.js');
 const { queues } = require('./play.js');
 
-// Fungsi untuk membuat embed queue
 function createQueueEmbed(queue, guildName) {
     const embed = new EmbedBuilder()
         .setColor('#00ffcc')

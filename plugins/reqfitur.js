@@ -1,10 +1,9 @@
-// reqfitur.js
 module.exports = {
     name: "reqfitur",
     description: "Mengirim request fitur ke channel khusus",
-    run: async(client, message, args) => {
+    run: async (client, message, args) => {
 
-        const requestChannelId = "1439728878217072782"; // <--- GANTI
+        const requestChannelId = "1439728878217072782";
 
         const requestText = args.join(" ");
         if (!requestText)

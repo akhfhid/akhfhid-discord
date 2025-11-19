@@ -31,4 +31,3 @@ module.exports = (client) => {
         console.log(`🔁 Slash commands updated (${slashData.length})`);
     };
 };
-

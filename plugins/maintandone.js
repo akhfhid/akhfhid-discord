@@ -47,7 +47,6 @@ module.exports = {
             }
         }
 
-        // 🔵 Embed laporan
         const reportEmbed = new EmbedBuilder()
             .setColor("#0099ff")
             .setTitle("Maintenance Broadcast Report")

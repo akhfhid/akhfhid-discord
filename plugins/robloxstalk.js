@@ -12,7 +12,6 @@ module.exports = {
 
         let seconds = 0;
 
-        // === LOADING EMBED ===
         const loadingEmbed = new EmbedBuilder()
             .setColor("#FFFF00")
             .setTitle("🔍 Roblox Lookup")
@@ -26,7 +25,6 @@ module.exports = {
 
         const loadingMsg = await message.reply({ embeds: [loadingEmbed] });
 
-        // TIMER UPDATE PER DETIK
         const timer = setInterval(() => {
             seconds++;
 

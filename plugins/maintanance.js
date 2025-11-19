@@ -6,7 +6,6 @@ module.exports = {
     description: "Kirim pengumuman server maintenance ke channel tertentu",
     run: async (client, message, args) => {
 
-        // Cek apakah user mention channel
         const channel = message.mentions.channels.first();
         if (!channel) {
             return message.reply(
@@ -16,10 +15,8 @@ module.exports = {
             );
         }
 
-        // Remove channel mention dari args
         args.shift();
 
-        // Cek jumlah args setelah channel dihapus
         if (args.length < 4) {
             return message.reply(
                 "❗ Format salah!\nGunakan:\n" +
@@ -29,12 +26,11 @@ module.exports = {
             );
         }
 
-        const startDate = args[0];  // 20/11/2025
-        const startTime = args[1];  // 21:00
-        const endDate = args[2];    // 21/11/2025
-        const endTime = args[3];    // 03:00
+        const startDate = args[0];
+        const startTime = args[1];
+        const endDate = args[2];
+        const endTime = args[3];
 
-        // Buat embed
         const embed = new EmbedBuilder()
             .setColor("#ff3333")
             .setTitle("🔧 Server Maintenance Notification")
@@ -53,10 +49,8 @@ module.exports = {
             .setFooter({ text: "Server Maintenance Announcement" })
             .setTimestamp();
 
-        // Kirim ke channel yang disebut
         channel.send({ embeds: [embed] });
 
-        // Konfirmasi ke user
         message.reply(`✅ Pengumuman maintenance telah dikirim ke ${channel}!`);
     }
 };

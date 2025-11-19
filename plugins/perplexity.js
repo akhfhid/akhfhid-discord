@@ -68,7 +68,7 @@ module.exports = {
                     { name: "⏱️ Durasi", value: `${seconds} detik`, inline: true }
                 )
                 .setTimestamp()
-                .setFooter({ text: 'Requested by ' + `${message.author.tag}` + `ID: ${result.id}`|| 'User' });
+                .setFooter({ text: 'Requested by ' + `${message.author.tag}` + `ID: ${result.id}` || 'User' });
 
             await message.channel.send({ embeds: [mainEmbed] });
             const sources = result.response.search_results;
@@ -120,7 +120,7 @@ module.exports = {
                 components: [getButtons()]
             });
             const collector = sourceMsg.createMessageComponentCollector({
-                time: 5 * 60 * 1000 // 5 minutes
+                time: 5 * 60 * 1000
             });
 
             collector.on("collect", async (btn) => {

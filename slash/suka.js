@@ -2,17 +2,17 @@ const { SlashCommandBuilder, ActionRowBuilder, StringSelectMenuBuilder, EmbedBui
 
 module.exports = {
     data: new SlashCommandBuilder()
-        .setName('menulist') // Nama command yang akan digunakan (/suka)
+        .setName('menulist')
         .setDescription('Menampilkan daftar command yang bisa kamu pilih untuk info lebih lanjut.'),
 
     async execute(interaction) {
         const commands = Array.from(interaction.client.commands.values());
 
         const options = commands.map(cmd => ({
-            label: cmd.name, 
-            description: (cmd.description || 'Tidak ada deskripsi.').substring(0, 100), // Deskripsi singkat
+            label: cmd.name,
+            description: (cmd.description || 'Tidak ada deskripsi.').substring(0, 100),
             value: cmd.name,
-            emoji: '🔧' 
+            emoji: '🔧'
         }));
 
         if (options.length === 0) {

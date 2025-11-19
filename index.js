@@ -131,7 +131,7 @@ client.on("messageCreate", async (message) => {
 ┃ 🏠 Server    : ${message.guild.name}
 ┃ 🆔 Server ID : ${message.guild.id}
 ┃ 💬 Message   : ${message.content}
-┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`
+┃ ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`
     );
     const prefix = process.env.PREFIX || "!";
     if (!message.content.startsWith(prefix)) return;
@@ -139,7 +139,6 @@ client.on("messageCreate", async (message) => {
     const args = message.content.slice(prefix.length).trim().split(/ +/);
     const cmd = args.shift().toLowerCase();
 
-    // PERBAIKAN DI SINI
     const command =
         client.commands.get(cmd) ||
         client.commands.get(client.aliases.get(cmd));
@@ -508,15 +507,11 @@ client.on('interactionCreate', async (interaction) => {
         }
     }
 });
-
-const schedulePath = path.join(__dirname, 'data/schedules.json');
-let schedules = {};
 const configPath = path.join(__dirname, 'data/scheduleConfig.json');
 let scheduleConfig = {};
 if (fs.existsSync(configPath)) {
     scheduleConfig = JSON.parse(fs.readFileSync(configPath, 'utf8'));
 }
-
 async function sendScheduledMessage() {
     console.log(`[${new Date().toLocaleString()}] Mengecek jadwal harian...`);
 

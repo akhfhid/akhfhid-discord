@@ -1,112 +1,86 @@
-# Bot Discord by akhfhid
+# akhfhid-bot-dc
 
-A powerful and modular Discord bot built and maintained by **Affan Khulafa Hidayah (akhfhid)**.
-Portfolio: <a href="https://akhfhid.my.id" target="_blank"><strong>akhfhid.my.id</strong></a>
-
-<p align="center">
-  <img src="https://img.shields.io/badge/Node-%3E%3D18.0.0-339933?logo=node.js" />
-  <img src="https://img.shields.io/badge/Discord.js-v14-5865F2?logo=discord" />
-  <a href="https://www.gnu.org/licenses/gpl-3.0">
-    <img src="https://img.shields.io/badge/License-GPL%20v3-yellow.svg" />
-  </a>
-</p>
-
-A full-featured Discord bot built using **Node.js** and **Discord.js v14**, designed with a clean architecture and scalability in mind.
-
-> **Note:**
-> This project currently **does not support Linux environments** due to OS-specific modules used during development.
-> Supported platform: **Windows only**.
-
----
-
-## Installation
-
-1. Clone this repository:
-
-```bash
-git clone https://github.com/akhfhid/akhfhid-discord.git
-cd akhfhid-bot-dc
-```
-
-2. Install all dependencies:
-
-```bash
-npm install
-```
-
-3. Create a `.env` file:
-
-```
-TOKEN=your_discord_bot_token
-CLIENT_ID=your_application_client_id
-GUILD_ID=your_guild_id
-PREFIX=!
-```
-
----
+A powerful, modular, and feature-rich Discord bot built with **Node.js** and **Discord.js v14**. This bot is designed to be easily extensible and comes packed with essential features for modern Discord servers.
 
 ## Features
 
-* Modern **Discord.js v14** architecture
-* Automatic command loader
-* **AI Features** (ChatGPT + Perplexity API integration)
-* Music playback using DisTube + play-dl
-* YouTube search and streaming
-* Google Translate support
-* Environment-based configuration with dotenv
-* Auto-reload using chokidar
-* Scheduled jobs with node-cron
-* Clean logging using chalk
+### 🤖 AI Capabilities
+- **AI Chat**: Chat with an intelligent AI assistant using `!ai` or `!chat`.
+- **AI Research**: Perform deep research on any topic using Perplexity AI integration with `!airesearch` or `!perplexity`.
+- **Source Citations**: AI responses include citations and sources for verification.
 
----
+### 🎵 Music System
+- **High Quality Playback**: Powered by **DisTube** and **ffmpeg**.
+- **Commands**:
+  - `!play <song/url>`: Play a song or add to queue.
+  - `!queue`: View the current song queue.
+  - `!skip`: Skip the current song.
+  - `!stop`: Stop playback and leave the channel.
+- **Supported Sources**: YouTube, SoundCloud, Spotify, and more.
 
-# How to Create a Discord Bot
+### 📈 Leveling System
+- **XP Tracking**: Users gain XP by chatting.
+- **Level Up**: Automatic level-up notifications with custom embeds.
+- **Leaderboard**: View the top 10 most active users with `!leaderboard`.
+- **Rank Card**: Check your current level and progress with `!level`.
 
-## 1. Create a Discord Application
+### 🛠️ Utilities & Moderation
+- **User Info**: Get detailed information about a user with `!userinfo`.
+- **Server Info**: View comprehensive server statistics with `!serverinfo`.
+- **Roblox Stalker**: Look up Roblox user profiles and stats with `!roblox`.
+- **Maintenance Mode**: Announce server maintenance with `!maintenance` and `!maintdone`.
+- **Feature Requests**: Users can request features via `!reqfitur`.
 
-1. Go to: [https://discord.com/developers/applications](https://discord.com/developers/applications)
-2. Click **New Application**
-3. Enter any application name
+### 📅 Automation
+- **Scheduled Messages**: Set up daily automated messages (e.g., morning greetings) with `!setschedule`.
+- **Welcome System**: Customizable welcome messages for new members.
 
-## 2. Create a Bot User
+## Installation
 
-1. Open the **Bot** tab
-2. Click **Add Bot**
-3. Click **Reset Token** to generate your bot token
-4. Insert the token into your `.env` file as `TOKEN`
+### Prerequisites
+- **Node.js** v16.9.0 or higher
+- **FFmpeg** (for music features)
 
-## 3. Enable Privileged Gateway Intents
+### Setup
 
-Inside the **Bot** settings, enable:
+1. **Clone the repository**
+   ```bash
+   git clone https://github.com/akhfhid/akhfhid-bot-dc.git
+   cd akhfhid-bot-dc
+   ```
 
-* Presence Intent
-* Server Members Intent
-* Message Content Intent
+2. **Install dependencies**
+   ```bash
+   npm install
+   ```
 
-## 4. Invite the Bot to Your Server
+3. **Configure Environment Variables**
+   Create a `.env` file in the root directory and add the following:
+   ```env
+   TOKEN=your_discord_bot_token
+   PREFIX=!
+   BASE_API=your_api_endpoint
+   BASE_URL=your_base_url
+   ```
 
-1. Open **OAuth2 → URL Generator**
-2. Under *Scopes*, select `bot`
-3. Choose the permissions your bot needs
-4. Copy and open the generated URL to invite the bot
+4. **Start the Bot**
+   ```bash
+   node index.js
+   ```
 
-## 5. Run the Bot
+## Project Structure
 
-1. Make sure dependencies are installed and `.env` is configured.
-2. Start the bot:
+- `index.js`: Main entry point. Handles bot startup, events, and command loading.
+- `handler.js`: Dynamic command and plugin handler.
+- `slashHandler.js`: Handles registration and execution of Slash Commands.
+- `plugins/`: Contains all text-based commands (prefix commands).
+- `slash/`: Contains Slash Command definitions.
+- `data/`: Stores JSON data for levels, schedules, etc.
 
-```bash
-node index.js
-```
+## Contributing
 
-3. Test if the bot is working using the built-in ping command:
+Feel free to fork this repository and submit pull requests. Contributions are welcome!
 
-```bash
-!ping
-```
+## License
 
-If the bot responds with `Pong!`, everything is working correctly.
-
----
-
-If you need additional setup guidance or want to add command examples, feel free to ask.
+This project is licensed under the ISC License.

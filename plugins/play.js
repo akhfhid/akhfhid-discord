@@ -48,7 +48,7 @@ async function playNext(guildId, textChannel) {
         } catch (error) {
             console.error(error);
             textChannel.send("❌ Terjadi kesalahan saat memutar lagu berikutnya!");
-            playNext(guildId, textChannel); // Coba lagu berikutnya
+            playNext(guildId, textChannel);
         }
     } else {
         const connection = getVoiceConnection(guildId);
