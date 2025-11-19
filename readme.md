@@ -1,5 +1,10 @@
 # akhfhid-bot-dc
 
+![Node.js](https://img.shields.io/badge/node.js-16.9.0+-brightgreen.svg)
+![Discord.js](https://img.shields.io/badge/discord.js-v14-blue.svg)
+![License](https://img.shields.io/badge/license-ISC-orange.svg)
+![Status](https://img.shields.io/badge/status-active-success.svg)
+
 A powerful, modular, and feature-rich Discord bot built with **Node.js** and **Discord.js v14**. This bot is designed to be easily extensible and comes packed with essential features for modern Discord servers.
 
 ## Features
@@ -76,6 +81,12 @@ A powerful, modular, and feature-rich Discord bot built with **Node.js** and **D
 - `plugins/`: Contains all text-based commands (prefix commands).
 - `slash/`: Contains Slash Command definitions.
 - `data/`: Stores JSON data for levels, schedules, etc.
+
+## Author
+
+**Affan Khulafa Hidayah**
+
+Portfolio: [akhfhid.my.id](https://akhfhid.my.id)
 
 ## Contributing
 
