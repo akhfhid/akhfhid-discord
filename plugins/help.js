@@ -21,11 +21,10 @@ module.exports = {
         sortedCommands.forEach(cmd => {
             let entry = `**!${cmd.name}** — *${cmd.description || 'No description available'}*\n`;
             if (cmd.alias && cmd.alias.length > 0) {
-                entry += `   ➤ **Alias cmd:** ${cmd.alias.map(a => `\`${a}\``).join(', ')}\n`;
+                entry += `   ➤ **Alias:** ${cmd.alias.map(a => `\`!${a}\``).join(', ')}\n`;
             }
             entry += '\n';
 
-            // Discord limit is 1024, we use 900 to be safe
             if (currentField.length + entry.length > 900) {
                 embed.addFields({
                     name: `Commands (Part ${fieldCount})`,
