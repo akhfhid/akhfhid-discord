@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Akhfhid Bot - Dashboard</title>
+    <link rel="stylesheet" href="style.css">
+    <!-- Font Poppins -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Font Awesome untuk Ikon -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+
+    <div class="container">
+        <!-- Panel Kiri: Branding -->
+        <div class="left-panel">
+            <div class="branding">
+                <img src="https://anime.akhfhid.my.id/assets/images/akhfhid.png" alt="Akhfhid Bot Logo" class="logo">
+                <h1 class="bot-name">Akhfhid</h1>
+                <p class="tagline">Your All-in-One Discord Companion</p>
+                <a href="https://discord.com/oauth2/authorize?client_id=1439201742599491694&permissions=0&integration_type=0&scope=bot+applications.commands" class="cta-button" target="_blank">
+                    <i class="fas fa-plus"></i> Invite to Server
+                </a>
+            </div>
+            <div class="social-links">
+                <a href="#"><i class="fab fa-github"></i></a>
+                <a href="#"><i class="fab fa-discord"></i></a>
+                <a href="#"><i class="fab fa-twitter"></i></a>
+            </div>
+        </div>
+
+        <!-- Panel Kanan: Konten Dinamis -->
+        <div class="right-panel">
+            <!-- Navigasi -->
+            <nav class="main-nav">
+                <ul>
+                    <li class="nav-link active" data-target="dashboard"><i class="fas fa-tachometer-alt"></i> Dashboard</li>
+                    <li class="nav-link" data-target="features"><i class="fas fa-star"></i> Features</li>
+                    <li class="nav-link" data-target="documentation"><i class="fas fa-book"></i> Documentation</li>
+                    <li class="nav-link" data-target="support"><i class="fas fa-headset"></i> Support</li>
+                </ul>
+            </nav>
+
+            <!-- Konten Area -->
+            <div class="content-area">
+                <!-- Halaman Dashboard -->
+                <div class="page active" id="dashboard">
+                    <h2>Real-Time Statistics</h2>
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-icon"><i class="fas fa-clock"></i></div>
+                            <div class="stat-info">
+                                <h3>Uptime</h3>
+                                        <p id="uptime">Loading...</p>
+                                    </div>
+                                </div>
+                                <div class="stat-card">
+                                    <div class="stat-icon"><i class="fas fa-server"></i></div>
+                                    <div class="stat-info">
+                                        <h3>Servers</h3>
+                                        <p id="server-count">Loading...</p>
+                                    </div>
+                                </div>
+                                <div class="stat-card">
+                                    <div class="stat-icon"><i class="fas fa-users"></i></div>
+                                    <div class="stat-info">
+                                        <h3>Total Members</h3>
+                                        <p id="user-count">Loading...</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Halaman Features -->
+                        <div class="page" id="features">
+                            <h2>Core Features</h2>
+                            <div class="feature-list">
+                                <div class="feature-item">
+                                    <i class="fas fa-music"></i>
+                                    <div class="feature-text">
+                                        <h3>High-Quality Music</h3>
+                                        <p>Stream music from various sources with unparalleled quality.</p>
+                                    </div>
+                                </div>
+                                <div class="feature-item">
+                                    <i class="fas fa-shield-alt"></i>
+                                    <div class="feature-text">
+                                        <h3>Advanced Moderation</h3>
+                                        <p>Keep your server safe with powerful and customizable moderation tools.</p>
+                                    </div>
+                                </div>
+                                <div class="feature-item">
+                                    <i class="fas fa-gamepad"></i>
+                                    <div class="feature-text">
+                                        <h3>Fun & Games</h3>
+                                        <p>Engage your community with a wide variety of fun commands and games.</p>
+                                    </div>
+                                </div>
+                                <div class="feature-item">
+                                    <i class="fas fa-chart-line"></i>
+                                    <div class="feature-text">
+                                        <h3>Leveling & Economy</h3>
+                                        <p>Reward active members with a comprehensive leveling and economy system.</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Halaman Documentation -->
+                        <div class="page" id="documentation">
+                            <h2>Documentation</h2>
+                            <p>Welcome to the Akhfhid Bot documentation. Here you will find all the information you need to configure and use the bot effectively.</p>
+                            <div class="doc-links">
+                                <a href="#"><i class="fas fa-book-open"></i> Getting Started</a>
+                                <a href="#"><i class="fas fa-cogs"></i> Command List</a>
+                                <a href="#"><i class="fas fa-code"></i> API Reference</a>
+                                <a href="#"><i class="fas fa-question-circle"></i> FAQs</a>
+                            </div>
+                        </div>
+
+                        <!-- Halaman Support -->
+                        <div class="page" id="support">
+                            <h2>Need Help?</h2>
+                            <p>Our team is ready to assist you. Join our support server to get in touch with us and the community.</p>
+                            <a href="LINK_SERVER_SUPPORT_DISCORD" class="cta-button" target="_blank">
+                                <i class="fas fa-life-ring"></i> Join Support Server
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
