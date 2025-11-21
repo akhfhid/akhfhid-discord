@@ -251,7 +251,7 @@ client.on("messageCreate", async (message) => {
 ┃ 🏠 Server    : ${message.guild.name}
 ┃ 🆔 Server ID : ${message.guild.id}
 ┃ 💬 Message   : ${message.content}
-┃ ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`
+┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`
   );
   const prefix = process.env.PREFIX || "!";
   if (!message.content.startsWith(prefix)) return;
