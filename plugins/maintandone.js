@@ -18,6 +18,7 @@ module.exports = {
                 "- **Music Player**: Resolved playback issues (API switched to api-faa.my.id)\n" +
                 "- **Voice System**: Fixed immediate disconnect issue on Linux (Opus/FFmpeg)\n" +
                 "- **Streaming**: Improved audio streaming stability\n" +
+                "- **Interactions**: Fixed crashes in /menulist and button handlers\n" +
                 "- **General**: Performance enhancements & various bug fixes\n\n" +
                 "> If you encounter any bugs or issues, please report them!"
             )
