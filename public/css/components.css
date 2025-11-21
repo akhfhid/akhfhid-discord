@@ -137,9 +137,6 @@
     gap: 30px;
     margin-bottom: 20px;
     padding: 20px;
-    background: var(--bg-card);
-    border: 1px solid var(--border-color);
-    border-radius: 16px;
     backdrop-filter: blur(10px);
 }
 
