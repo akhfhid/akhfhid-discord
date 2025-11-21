@@ -21,7 +21,6 @@ module.exports = {
     }
 
     try {
-      // --- LOADING EMBED ---
       const loadingEmbed = new EmbedBuilder()
         .setColor("#FFCC00")
         .setAuthor({
@@ -50,13 +49,8 @@ module.exports = {
         loadingMsg.edit({ embeds: [updated] }).catch(() => {});
       }, 1000);
 
-      // --- INPUT TEXT & MENTIONS ---
       const text = args.join(" ");
       const targetUser = message.mentions.members.first();
-
-      // ================================================================
-      // ========== AMBIL 10 PESAN TERAKHIR DARI CHANNEL ================
-      // ================================================================
       const fetchedMessages = await message.channel.messages.fetch({
         limit: 10,
       });
@@ -68,9 +62,6 @@ module.exports = {
         )
         .join("\n");
 
-      // ================================================================
-      // ==================== AMBIL INFO USER MENTION ===================
-      // ================================================================
       let targetInfo = "";
 
       if (targetUser) {
@@ -90,14 +81,7 @@ Tentang user yang kamu sebut (${targetUser.user.username}):
 `.trim();
       }
 
-      // ================================================================
-      // ====================== INFO JUMLAH MEMBER ======================
-      // ================================================================
       const totalMembers = message.guild.memberCount;
-
-      // ================================================================
-      // ==================== SIAPA SAJA DI VOICE CHANNEL ===============
-      // ================================================================
       const voiceMembers = message.guild.channels.cache
         .filter((c) => c.type === 2) // voice channels
         .map((vc) => {
@@ -107,19 +91,10 @@ Tentang user yang kamu sebut (${targetUser.user.username}):
             : `${vc.name}: (kosong)`;
         })
         .join("\n");
-
-      // ================================================================
-      // ====================== DAFTAR SEMUA MEMBER =====================
-      // ================================================================
       const allMembers = message.guild.members.cache
         .map((m) => m.user.username)
         .slice(0, 50) // batas biar tidak terlalu panjang
         .join(", ");
-
-      // ================================================================
-      // ====================== SYSTEM PROMPT SUPER AI ==================
-      // ================================================================
-
       const systemPrompt = `
 Kamu adalah akhfhid, asisten AI yang ramah, realistis, dan sosial, tinggal di server Discord "${
         message.guild.name
@@ -150,13 +125,9 @@ Jangan minta konfirmasi. Jangan menawarkan opsi.
 
 AI-mu harus membaca suasana hati (vibe) dari pesan pengguna tanpa mengaku menganalisis.
 
-Berikut adalah 10 pesan terakhir di channel ini:
+Berikut adalah 10 pesan terakhir di channel ini berkomunikasi lah sesuai dengan nama server dan topik yang relevan :
 ${chatContext}
 `.trim();
-
-      // ================================================================
-      // ============================ API CALL ===========================
-      // ================================================================
 
       const data = {
         text: text,

@@ -1,0 +1,60 @@
+.container {
+    display: flex;
+    height: 100vh;
+}
+
+/* --- Left Panel --- */
+.left-panel {
+    width: 35%;
+    background: var(--bg-secondary);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 40px;
+    border-right: 1px solid var(--border-color);
+    position: relative;
+    overflow: hidden;
+}
+
+.left-panel::before {
+    content: '';
+    position: absolute;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle, rgba(124, 58, 237, 0.2) 0%, transparent 70%);
+    animation: rotate 20s linear infinite;
+}
+
+/* --- Right Panel --- */
+.right-panel {
+    width: 65%;
+    display: flex;
+    flex-direction: column;
+}
+
+.content-area {
+    flex-grow: 1;
+    padding: 40px;
+    overflow-y: auto;
+    /* Hanya konten area yang bisa di-scroll jika perlu */
+}
+
+.content-area::-webkit-scrollbar {
+    width: 8px;
+}
+
+.content-area::-webkit-scrollbar-track {
+    background: var(--bg-secondary);
+}
+
+.content-area::-webkit-scrollbar-thumb {
+    background: var(--accent-color);
+    border-radius: 4px;
+}
+
+.two-column-wrapper {
+    display: flex;
+    gap: 20px;
+    margin-top: 30px;
+}

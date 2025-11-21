@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Akhfhid Bot - Dashboard</title>
+
+    <link rel="stylesheet" href="css/variables.css" />
+    <link rel="stylesheet" href="css/base.css" />
+    <link rel="stylesheet" href="css/layout.css" />
+    <link rel="stylesheet" href="css/components.css" />
+    <link rel="stylesheet" href="css/animations.css" />
+    <link rel="stylesheet" href="css/pages.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+</head>
+
+<body>
+    <div class="container">
+        <%- include('partials/sidebar') %>
+
+            <div class="right-panel">
+                <nav class="main-nav">
+                    <ul>
+                        <li class="nav-link active" data-target="dashboard">
+                            <i class="fas fa-tachometer-alt"></i> Dashboard
+                        </li>
+                        <li class="nav-link" data-target="features">
+                            <i class="fas fa-star"></i> Features
+                        </li>
+                        <li class="nav-link" data-target="documentation">
+                            <i class="fas fa-book"></i> Documentation
+                        </li>
+                        <li class="nav-link" data-target="support">
+                            <i class="fas fa-headset"></i> Support
+                        </li>
+                    </ul>
+                </nav>
+
+                <div class="content-area">
+                    <%- include('partials/dashboard') %>
+                        <%- include('partials/features') %>
+                            <%- include('partials/documentation') %>
+                                <%- include('partials/support') %>
+                </div>
+            </div>
+    </div>
+
+    <script src="js/main.js"></script>
+    <script src="js/navigation.js"></script>
+    <script src="js/stats.js"></script>
+</body>
+
+</html>

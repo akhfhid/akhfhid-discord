@@ -1,0 +1,268 @@
+<div class="page" id="documentation">
+    <h2>Documentation</h2>
+    <p>
+        Welcome to Akhfhid Bot documentation. Here you will find all the
+        information you need to configure and use the bot effectively.
+    </p>
+
+    <!-- Navigasi Sub-Menu -->
+    <div class="doc-sub-nav">
+        <div class="doc-link active" data-target="doc-getting-started">
+            <i class="fas fa-book-open"></i> Getting Started
+        </div>
+        <div class="doc-link" data-target="doc-command-list">
+            <i class="fas fa-cogs"></i> Command List
+        </div>
+        <div class="doc-link" data-target="doc-api-reference">
+            <i class="fas fa-code"></i> API Reference
+        </div>
+        <div class="doc-link" data-target="doc-faqs">
+            <i class="fas fa-question-circle"></i> FAQs
+        </div>
+    </div>
+
+    <!-- Konten untuk Setiap Menu -->
+    <div class="doc-content-area">
+        <!-- Getting Started -->
+        <div id="doc-getting-started" class="doc-content active">
+            <h3>Getting Started with Akhfhid Bot</h3>
+            <p>
+                Follow these simple steps to get Akhfhid Bot up and running in
+                your server.
+            </p>
+            <ol>
+                <li>
+                    <strong>Invite the Bot:</strong> Click the "Invite to
+                    Server" button on the home page and select your server.
+                </li>
+                <li>
+                    <strong>Grant Permissions:</strong> Make sure the bot has
+                    the necessary permissions to read and send messages, connect
+                    to voice channels, etc.
+                </li>
+                <li>
+                    <strong>Run a Command:</strong> Try typing
+                    <code>!help</code> in any channel to see the list of
+                    available commands.
+                </li>
+                <li>
+                    <strong>Explore Features:</strong> Check out the music,
+                    moderation, and fun features to make your server more
+                    engaging!
+                </li>
+            </ol>
+        </div>
+
+        <!-- Command List -->
+        <div id="doc-command-list" class="doc-content">
+            <h3>Command List</h3>
+            <p>
+                Here are all the commands you can use with the Akhfhid bot:
+            </p>
+
+            <div class="command-category">
+                <h4><i class="fas fa-robot"></i> AI & Utility Commands</h4>
+                <ul>
+                    <li>
+                        <code>!chat [message]</code> — Chat with Akhfhid AI.
+                    </li>
+                    <li>
+                        <code>!airesearch [topic]</code> — Perform in-depth
+                        research using AI.
+                    </li>
+                    <li>
+                        <code>!plex [query]</code> — Search for information with
+                        Perplexity AI.
+                    </li>
+                    <li>
+                        <code>!roblox [username]</code> — Check complete Roblox
+                        user information.
+                    </li>
+                    <li>
+                        <code>!help</code> — Displays a list of all available
+                        commands.
+                    </li>
+                    <li>
+                        <code>!ping</code> — Check the bot's response speed.
+                    </li>
+                    <li>
+                        <code>!reqfitur [message]</code> — Send a feature request
+                        to a dedicated channel.
+                    </li>
+                </ul>
+            </div>
+
+            <div class="command-category">
+                <h4><i class="fas fa-trophy"></i> Leveling Commands</h4>
+                <ul>
+                    <li>
+                        <code>!leaderboard</code> — Displays the top 10 users with
+                        the highest level in the server.
+                    </li>
+                    <li>
+                        <code>!level [@user]</code> — View your or another user's
+                        level and XP.
+                    </li>
+                </ul>
+            </div>
+
+            <div class="command-category">
+                <h4><i class="fas fa-music"></i> Music Commands</h4>
+                <ul>
+                    <li>
+                        <code>!play [song name]</code> — Play a song or add it to
+                        the queue.
+                    </li>
+                    <li><code>!queue</code> — Displays the music queue.</li>
+                    <li>
+                        <code>!skip</code> — Skips the currently playing song.
+                    </li>
+                    <li>
+                        <code>!stop</code> — Stops the song and clears the queue.
+                    </li>
+                </ul>
+            </div>
+
+            <div class="command-category">
+                <h4>
+                    <i class="fas fa-shield-alt"></i> Admin & Moderation
+                    Commands
+                </h4>
+                <ul>
+                    <li>
+                        <code>!maintenance [message]</code> — Send a maintenance
+                        announcement to a specific channel.
+                    </li>
+                    <li>
+                        <code>!maintdone [message]</code> — Send an announcement
+                        that maintenance is complete to all servers.
+                    </li>
+                    <li>
+                        <code>!setschedule</code> — Configure the daily schedule
+                        channel and status.
+                    </li>
+                    <li>
+                        <code>!welcome [#channel]</code> — Configure the server's
+                        welcome message channel.
+                    </li>
+                </ul>
+            </div>
+
+            <div class="command-category">
+                <h4>
+                    <i class="fas fa-info-circle"></i> Information Commands
+                </h4>
+                <ul>
+                    <li>
+                        <code>!serverinfo</code> — Shows information about the
+                        server.
+                    </li>
+                    <li>
+                        <code>!userinfo [@user]</code> — Displays detailed
+                        information about a user.
+                    </li>
+                </ul>
+            </div>
+
+            <div class="command-category">
+                <h4><i class="fas fa-code"></i> Aliases</h4>
+                <p>
+                    Some commands have aliases (short names) for easier use:
+                </p>
+                <ul>
+                    <li>
+                        <code>!ai</code> ➤ <code>!gpt</code>, <code>!chat</code>
+                    </li>
+                    <li>
+                        <code>!airesearch</code> ➤ <code>!ai</code>,
+                        <code>!research</code>
+                    </li>
+                    <li>
+                        <code>!help</code> ➤ <code>!h</code>,
+                        <code>!commands</code>
+                    </li>
+                    <li>
+                        <code>!leaderboard</code> ➤ <code>!top</code>,
+                        <code>!lb</code>
+                    </li>
+                    <li>
+                        <code>!level</code> ➤ <code>!rank</code>,
+                        <code>!lvl</code>
+                    </li>
+                    <li><code>!maintenance</code> ➤ <code>!maint</code></li>
+                    <li><code>!maintdone</code> ➤ <code>!mdone</code></li>
+                    <li>
+                        <code>!perplexity</code> ➤ <code>!plex</code>,
+                        <code>!ai-plex</code>
+                    </li>
+                    <!-- <li>
+            <code>!ping</code> ➤ <code>!p</code>,
+            <code>!latency</code>
+          </li> -->
+                    <li><code>!play</code> ➤ <code>!p</code></li>
+                    <li><code>!queue</code> ➤ <code>!q</code></li>
+                    <li>
+                        <code>!serverinfo</code> ➤ <code>!si</code>,
+                        <code>!server</code>
+                    </li>
+                    <li><code>!setschedule</code> ➤ <code>!setsch</code></li>
+                    <li><code>!skip</code> ➤ <code>!s</code></li>
+                    <li><code>!stop</code> ➤ <code>!st</code></li>
+                    <li>
+                        <code>!userinfo</code> ➤ <code>!ui</code>,
+                        <code>!whois</code>
+                    </li>
+                    <li><code>!welcome</code> ➤ <code>!w</code></li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- API Reference -->
+        <div id="doc-api-reference" class="doc-content">
+            <h3>API Reference</h3>
+            <p>
+                For developers, Akhfhid Bot provides a simple REST API to
+                interact with its core functionalities.
+            </p>
+            <div class="api-endpoint">
+                <h4>GET /api/stats</h4>
+                <p>Returns real-time statistics about the bot.</p>
+                <pre><code>{
+"serverCount": 150,
+"userCount": 25000,
+"uptime": 86400000
+}</code></pre>
+            </div>
+            <p>More endpoints are coming soon. Stay tuned!</p>
+        </div>
+
+        <!-- FAQs -->
+        <div id="doc-faqs" class="doc-content">
+            <h3>Frequently Asked Questions (FAQs)</h3>
+            <div class="faq-item">
+                <h4>Q: The bot is not responding to my commands.</h4>
+                <p>
+                    <strong>A:</strong> First, check if the bot has the correct
+                    permissions. If it does, try kicking and re-inviting the bot
+                    to your server. This often resolves permission issues.
+                </p>
+            </div>
+            <div class="faq-item">
+                <h4>Q: How can I change the bot's prefix?</h4>
+                <p>
+                    <strong>A:</strong> Currently, the prefix is fixed. However,
+                    we are working on a customizable prefix feature that will be
+                    available in a future update.
+                </p>
+            </div>
+            <div class="faq-item">
+                <h4>Q: Can I suggest a new feature?</h4>
+                <p>
+                    <strong>A:</strong> We appreciate your feedback. Use the
+                    command !reqfitur to submit your feature request directly to
+                    the owner.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>

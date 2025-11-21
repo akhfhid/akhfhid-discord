@@ -59,35 +59,82 @@ async function updateStats() {
     if (!response.ok) throw new Error("Network response was not ok");
     const stats = await response.json();
 
-    // Update uptime
+    // Update statistik lama
     document.getElementById("uptime").innerText = formatUptime(stats.uptime);
-
-    // Update server count dengan animasi
     const currentServerCount = parseInt(
       document.getElementById("server-count").innerText.replace(/\D/g, "") || 0
     );
     if (currentServerCount !== stats.serverCount) {
       animateValue("server-count", currentServerCount, stats.serverCount, 1000);
     }
-
-    // Update user count dengan animasi
     const currentUserCount = parseInt(
       document.getElementById("user-count").innerText.replace(/\D/g, "") || 0
     );
     if (currentUserCount !== stats.userCount) {
       animateValue("user-count", currentUserCount, stats.userCount, 1500);
     }
+
+    // --- UPDATE INFO SERVER BARU ---
+    document.getElementById("cpu-load").innerText = stats.cpuLoad;
+    document.getElementById("memory-usage").innerText = stats.memoryUsage;
+    document.getElementById("node-version").innerText = stats.nodeVersion;
+    document.getElementById("api-ping").innerText = `${stats.ping}ms`;
+    document.getElementById(
+      "djs-version"
+    ).innerText = `v${stats.discordJsVersion}`;
+    document.getElementById("platform").innerText = stats.platform;
+    document.getElementById("server-uptime").innerText = formatUptime(
+      stats.serverUptime * 1000
+    ); // os.uptime() dalam detik
+    document.getElementById("commands-run").innerText =
+      stats.commandsRun.toLocaleString("id-ID");
+
+    const statusEl = document.getElementById("bot-status");
+    const indicatorEl = document.getElementById("status-indicator");
+    if (stats.botStatus === "Online") {
+      statusEl.innerText = "Online";
+      indicatorEl.className = "fas fa-circle online";
+    } else {
+      statusEl.innerText = "Offline";
+      indicatorEl.className = "fas fa-circle offline";
+    }
   } catch (error) {
     console.error("Failed to fetch stats:", error);
-    document.getElementById("uptime").innerText = "Error";
-    document.getElementById("server-count").innerText = "Error";
-    document.getElementById("user-count").innerText = "Error";
+    // Tampilkan error pada info server
+    const serverInfoIds = [
+      "cpu-load",
+      "memory-usage",
+      "node-version",
+      "api-ping",
+      "djs-version",
+      "platform",
+    ];
+    serverInfoIds.forEach((id) => {
+      document.getElementById(id).innerText = "Error";
+    });
   }
 }
 
 // --- INISIALISASI ---
 document.addEventListener("DOMContentLoaded", () => {
   updateStats();
-  // Update setiap 30 detik
   setInterval(updateStats, 30000);
+});
+
+// --- FUNGSI NAVIGASI DOKUMENTASI ---
+const docLinks = document.querySelectorAll('.doc-link');
+const docContents = document.querySelectorAll('.doc-content');
+
+docLinks.forEach(link => {
+    link.addEventListener('click', () => {
+        const targetContent = link.getAttribute('data-target');
+
+        // Hapus kelas active dari semua link dan konten
+        docLinks.forEach(l => l.classList.remove('active'));
+        docContents.forEach(c => c.classList.remove('active'));
+
+        // Tambahkan kelas active ke link dan konten yang diklik
+        link.classList.add('active');
+        document.getElementById(targetContent).classList.add('active');
+    });
 });
