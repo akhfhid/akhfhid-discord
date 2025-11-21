@@ -11,15 +11,17 @@ module.exports = {
             .setColor("#00cc66")
             .setTitle("Maintenance Completed")
             .setDescription(
-                "**Maintenance selesai!**\n\n" +
-                "Server sekarang sudah kembali **online** dan siap digunakan.\n\n" +
-                "**✔ Perubahan & Perbaikan:**\n" +
-                "- Optimisasi performa server\n" +
-                "- Penambahan fitur baru\n" +
-                "- Optimisasi server\n" +
-                "- Peningkatan keamanan\n\n" +
-                "> Jika kamu menemukan bug atau masalah lain, mohon laporkan ya!"
+                "**Maintenance Completed!**\n\n" +
+                "The server is now back **online** and ready to use.\n\n" +
+                "**✔ Updates & Fixes:**\n" +
+                "- **Dashboard**: Fixed 'Recent Activity' loading & added 'Popular Command'\n" +
+                "- **Music Player**: Resolved playback issues (API switched to api-faa.my.id)\n" +
+                "- **Voice System**: Fixed immediate disconnect issue on Linux (Opus/FFmpeg)\n" +
+                "- **Streaming**: Improved audio streaming stability\n" +
+                "- **General**: Performance enhancements & various bug fixes\n\n" +
+                "> If you encounter any bugs or issues, please report them!"
             )
+
             .setFooter({ text: "Server is now back online" })
             .setTimestamp();
 

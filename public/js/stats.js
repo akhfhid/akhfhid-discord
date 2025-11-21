@@ -80,6 +80,7 @@ async function updateStats() {
         setVal("platform", stats.platform);
         setVal("server-uptime", formatUptime(stats.serverUptime * 1000));
         setVal("commands-run", stats.commandsRun.toLocaleString("id-ID"));
+        setVal("popular-command", stats.popularCommand);
 
         const statusEl = document.getElementById("bot-status");
         const indicatorEl = document.getElementById("status-indicator");
@@ -110,8 +111,43 @@ async function updateStats() {
     }
 }
 
+// --- UPDATE ACTIVITY ---
+async function updateActivity() {
+    try {
+        const response = await fetch("/api/activity");
+        if (!response.ok) throw new Error("Network response was not ok");
+        const activities = await response.json();
+
+        const activityList = document.getElementById("activity-list");
+        if (!activityList) return;
+
+        if (activities.length === 0) {
+            activityList.innerHTML = "<li>No recent activity.</li>";
+            return;
+        }
+
+        activityList.innerHTML = activities
+            .map((activity) => {
+                const time = new Date(activity.timestamp).toLocaleTimeString("id-ID");
+                return `<li>
+                    <span class="activity-time">[${time}]</span>
+                    <span class="activity-desc">${activity.description}</span>
+                </li>`;
+            })
+            .join("");
+    } catch (error) {
+        console.error("Failed to fetch activity:", error);
+        const activityList = document.getElementById("activity-list");
+        if (activityList) {
+            activityList.innerHTML = "<li>Error loading activity.</li>";
+        }
+    }
+}
+
 // --- INISIALISASI ---
 document.addEventListener("DOMContentLoaded", () => {
     updateStats();
+    updateActivity();
     setInterval(updateStats, 30000);
+    setInterval(updateActivity, 10000); // Update activity every 10 seconds
 });

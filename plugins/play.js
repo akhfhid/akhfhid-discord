@@ -8,8 +8,13 @@ const {
     getVoiceConnection
 } = require('@discordjs/voice');
 const { EmbedBuilder } = require('discord.js');
+const ffmpegPath = require('ffmpeg-static');
 const queues = new Map();
 const akhfhid = process.env.BASE_API;
+
+// Ensure ffmpeg path is set for @discordjs/voice if needed
+process.env.FFMPEG_PATH = ffmpegPath;
+
 function createSongEmbed(metadata, type = 'play') {
     const embed = new EmbedBuilder()
         .setColor(type === 'play' ? '#0099ff' : '#ff3366')
@@ -35,15 +40,30 @@ async function playNext(guildId, textChannel) {
         queue.nowPlaying = nextSong;
 
         try {
-            const response = await axios.get(`${akhfhid}/downloader/youtube/play/v1?q=${encodeURIComponent(nextSong.searchTerm)}`);
+            const response = await axios.get(`https://api-faa.my.id/faa/ytplay?query=${encodeURIComponent(nextSong.searchTerm)}`);
             const data = response.data;
 
-            if (data.success) {
-                const { metadata, downloadUrl } = data.result;
+            if (data.status) {
+                const result = data.result;
+                const metadata = {
+                    title: result.title,
+                    channel: result.author,
+                    duration: result.duration,
+                    cover: result.thumbnail,
+                    requestedBy: nextSong.requestedBy
+                };
+                const downloadUrl = result.mp3;
+                console.log("Playing URL (next):", downloadUrl);
+                
+                const streamResponse = await axios.get(downloadUrl, { responseType: 'stream' });
+                const resource = createAudioResource(streamResponse.data);
+                
                 const embed = createSongEmbed(metadata, 'nowplaying');
                 textChannel.send({ embeds: [embed] });
-                const resource = createAudioResource(downloadUrl);
                 queue.player.play(resource);
+            } else {
+                textChannel.send("❌ Gagal memuat lagu berikutnya.");
+                playNext(guildId, textChannel);
             }
         } catch (error) {
             console.error(error);
@@ -77,16 +97,26 @@ module.exports = {
 
         try {
             const loadingMessage = await message.reply("Finding song...");
-            const response = await axios.get(`${akhfhid}/downloader/youtube/play/v1?q=${encodeURIComponent(searchTerm)}`);
+            const response = await axios.get(`https://api-faa.my.id/faa/ytplay?query=${encodeURIComponent(searchTerm)}`);
             const data = response.data;
             loadingMessage.delete();
-            if (!data.success) {
+            
+            if (!data.status) {
                 return message.reply("❌ Tidak dapat menemukan lagu tersebut!");
             }
 
-            const { metadata, downloadUrl } = data.result;
-            metadata.requestedBy = message.author.tag;
-            metadata.searchTerm = searchTerm;
+            const result = data.result;
+            const metadata = {
+                title: result.title,
+                channel: result.author,
+                duration: result.duration,
+                cover: result.thumbnail,
+                requestedBy: message.author.tag,
+                searchTerm: searchTerm
+            };
+            const downloadUrl = result.mp3;
+            console.log("Playing URL:", downloadUrl);
+            
             let queue = queues.get(message.guild.id);
 
             if (!queue) {
@@ -99,6 +129,20 @@ module.exports = {
                 const player = createAudioPlayer();
                 connection.subscribe(player);
 
+                // DEBUG: Monitor Voice Connection State
+                connection.on('stateChange', (oldState, newState) => {
+                    console.log(`Connection transitioned from ${oldState.status} to ${newState.status}`);
+                });
+
+                // DEBUG: Monitor Audio Player State
+                player.on('stateChange', (oldState, newState) => {
+                    console.log(`Audio player transitioned from ${oldState.status} to ${newState.status}`);
+                });
+
+                player.on('error', error => {
+                    console.error('Audio Player Error:', error);
+                });
+
                 queue = {
                     connection,
                     player,
@@ -108,12 +152,15 @@ module.exports = {
                 };
                 queues.set(message.guild.id, queue);
                 queue.nowPlaying = metadata;
-                const resource = createAudioResource(downloadUrl);
+                
+                const streamResponse = await axios.get(downloadUrl, { responseType: 'stream' });
+                const resource = createAudioResource(streamResponse.data);
                 player.play(resource);
 
                 const embed = createSongEmbed(metadata, 'nowplaying');
                 message.channel.send({ embeds: [embed] });
                 player.on(AudioPlayerStatus.Idle, () => {
+                    console.log("Audio Player Idle");
                     playNext(message.guild.id, message.channel);
                 });
 

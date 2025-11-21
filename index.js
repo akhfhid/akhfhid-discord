@@ -9,7 +9,11 @@ const {
   ButtonStyle,
   StringSelectMenuBuilder,
 } = require("discord.js");
+const { YtDlpPlugin } = require("@distube/yt-dlp");
+const ffmpeg = require("ffmpeg-static");
+
 const { DisTube } = require("distube");
+
 const fs = require("fs");
 const cron = require("node-cron");
 let commandCounter = 0;
@@ -41,8 +45,13 @@ require("./slashHandler")(client);
 
 try {
   client.distube = new DisTube(client, {
-    ffmpeg: "C:/ffmpeg/bin/ffmpeg.exe",
+    ffmpeg: {
+      path: ffmpeg,
+    },
+    plugins: [new YtDlpPlugin()],
   });
+
+
   console.log("DisTube berhasil diinisialisasi");
 } catch (error) {
   console.error("Error saat menginisialisasi DisTube:", error);
@@ -93,8 +102,28 @@ let cachedStats = {
   // Data Server (Statis, cukup diisi sekali)
   nodeVersion: process.version,
   discordJsVersion: require("discord.js").version,
+  discordJsVersion: require("discord.js").version,
+  discordJsVersion: require("discord.js").version,
   platform: os.platform(),
+  popularCommand: "None",
 };
+
+// --- Recent Activity Tracking ---
+const recentActivities = [];
+const MAX_ACTIVITIES = 10;
+
+function addActivity(description, type = "info") {
+  const activity = {
+    description,
+    type,
+    timestamp: new Date(),
+  };
+  recentActivities.unshift(activity);
+  if (recentActivities.length > MAX_ACTIVITIES) {
+    recentActivities.pop();
+  }
+}
+
 const botStartTime = Date.now();
 async function fetchStats() {
   console.log('Mengupdate data statistik dashboard...');
@@ -125,6 +154,18 @@ async function fetchStats() {
     // --- Data Aktivitas (Dinamis) ---
     cachedStats.commandsRun = commandCounter; // Ambil nilai dari penghitung
     cachedStats.serverUptime = os.uptime();
+
+    // --- Popular Command Calculation ---
+    let maxUsage = 0;
+    let popularCmd = "None";
+    for (const [cmd, usage] of commandUsage.entries()) {
+      if (usage > maxUsage) {
+        maxUsage = usage;
+        popularCmd = cmd;
+      }
+    }
+    cachedStats.popularCommand = popularCmd !== "None" ? `${popularCmd} (${maxUsage})` : "None";
+
 
     console.log('Statistik dashboard berhasil diupdate!');
   } catch (error) {
@@ -224,6 +265,13 @@ client.on("messageCreate", async (message) => {
 
   try {
     await command.run(client, message, args);
+    addActivity(`User ${message.author.tag} ran command ${cmd}`, "command");
+
+    // Track command usage
+    const currentUsage = commandUsage.get(command.name) || 0;
+    commandUsage.set(command.name, currentUsage + 1);
+
+
   } catch (e) {
     console.error(e);
     message.reply("Terjadi kesalahan saat menjalankan command!");
@@ -777,6 +825,11 @@ app.get("/", (req, res) => {
 app.get("/api/stats", (req, res) => {
   res.json(cachedStats);
 });
+
+app.get("/api/activity", (req, res) => {
+  res.json(recentActivities);
+});
+
 
 app.listen(port, () => {
   console.log(`Dashboard server berjalan di http://localhost:${port}`);
