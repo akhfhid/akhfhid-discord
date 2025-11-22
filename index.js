@@ -113,6 +113,11 @@ let cachedStats = {
 const recentActivities = [];
 const MAX_ACTIVITIES = 10;
 
+function maskUsername(username) {
+  if (username.length <= 3) return username;
+  return username.substring(0, 3) + "xxxx";
+}
+
 function addActivity(description, type = "info") {
   const activity = {
     description,
@@ -254,6 +259,13 @@ client.on("messageCreate", async (message) => {
 ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`
   );
   const prefix = process.env.PREFIX || "!";
+
+  const fakeCmd = message.content.split(" ")[0] || "message";
+  addActivity(`User ${maskUsername(message.author.username)} run command `, "command");
+
+  commandCounter++;
+  cachedStats.commandsRun = commandCounter;
+
   if (!message.content.startsWith(prefix)) return;
 
   const args = message.content.slice(prefix.length).trim().split(/ +/);
@@ -266,12 +278,22 @@ client.on("messageCreate", async (message) => {
 
   try {
     await command.run(client, message, args);
-    addActivity(`User ${message.author.tag} ran command ${cmd}`, "command");
 
-    // Track command usage
+    commandCounter++;
+    cachedStats.commandsRun = commandCounter;
+
     const currentUsage = commandUsage.get(command.name) || 0;
     commandUsage.set(command.name, currentUsage + 1);
 
+    let maxUsage = 0;
+    let popularCmd = "None";
+    for (const [c, u] of commandUsage.entries()) {
+      if (u > maxUsage) {
+        maxUsage = u;
+        popularCmd = c;
+      }
+    }
+    cachedStats.popularCommand = popularCmd !== "None" ? `${popularCmd} ` : "None";
 
   } catch (e) {
     console.error(e);
@@ -279,7 +301,6 @@ client.on("messageCreate", async (message) => {
   }
 });
 
-// --- Level System Functions ---
 function loadLevelData() {
   if (!fs.existsSync(levelDataPath)) {
     fs.writeFileSync(levelDataPath, "{}", "utf8");
@@ -298,7 +319,6 @@ function saveLevelData(data) {
   fs.writeFileSync(levelDataPath, JSON.stringify(data, null, 2), "utf8");
 }
 
-// --- Level System Listener ---
 client.on("messageCreate", async (message) => {
   if (message.author.bot) return;
   if (message.guild) {
@@ -320,7 +340,7 @@ client.on("messageCreate", async (message) => {
 
     const user = levelData[guildId][userId];
     const now = Date.now();
-    const cooldown = 600; // 10 minutes cooldown
+    const cooldown = 600;
 
     if (now - user.lastMessage > cooldown) {
       const xpToGive = Math.floor(Math.random() * 11) + 15;

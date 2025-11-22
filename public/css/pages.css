@@ -75,12 +75,11 @@
 }
 
 /* Pastikan tidak ada scroll di layar besar */
-@media (min-width: 1200px) {
+/* @media (min-width: 1200px) {
     .system-info-panel {
         flex-wrap: nowrap;
-        /* Tidak boleh wrap di layar besar */
     }
-}
+} */
 
 .metric-item i {
     font-size: 1.2rem;
