@@ -109,6 +109,18 @@ let cachedStats = {
   popularCommand: "None",
 };
 
+app.get("/", (req, res) => {
+  res.render("index");
+});
+
+app.get("/privacy-policy", (req, res) => {
+  res.render("privacy");
+});
+
+app.get("/term-of-service", (req, res) => {
+  res.render("terms");
+});
+
 // --- Recent Activity Tracking ---
 const recentActivities = [];
 const MAX_ACTIVITIES = 10;

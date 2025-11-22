@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Terms of Service - Akhfhid Bot</title>
+    <link rel="stylesheet" href="css/variables.css">
+    <link rel="stylesheet" href="css/base.css">
+    <link rel="stylesheet" href="css/layout.css">
+    <link rel="stylesheet" href="css/components.css">
+    <link rel="stylesheet" href="css/pages.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .legal-content {
+            background: var(--bg-card);
+            padding: 40px;
+            border-radius: 16px;
+            border: 1px solid var(--border-color);
+            margin-top: 20px;
+            backdrop-filter: blur(10px);
+        }
+        .legal-content h1 {
+            color: var(--text-primary);
+            margin-bottom: 20px;
+            font-size: 2.5rem;
+        }
+        .legal-content h2 {
+            color: var(--accent-color);
+            margin-top: 30px;
+            margin-bottom: 15px;
+        }
+        .legal-content p, .legal-content ul {
+            color: var(--text-secondary);
+            line-height: 1.8;
+            margin-bottom: 15px;
+        }
+        .legal-content ul {
+            padding-left: 20px;
+        }
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            margin-bottom: 20px;
+            transition: color 0.3s;
+        }
+        .back-link:hover {
+            color: var(--accent-color);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <%- include('partials/sidebar') %>
+        
+        <div class="right-panel">
+            <div class="content-area">
+                <a href="/" class="back-link"><i class="fas fa-arrow-left"></i> Back to Dashboard</a>
+                
+                <div class="legal-content">
+                    <h1>Terms of Service</h1>
+                    <p>Last updated: November 2025</p>
+
+                    <h2>1. Acceptance of Terms</h2>
+                    <p>By inviting or using Akhfhid Bot, you agree to these Terms of Service.</p>
+
+                    <h2>2. Usage Rules</h2>
+                    <p>You agree not to use the bot for:</p>
+                    <ul>
+                        <li>Spamming commands or abusing the bot's resources.</li>
+                        <li>Violating Discord's Terms of Service or Community Guidelines.</li>
+                        <li>Any illegal activities.</li>
+                    </ul>
+
+                    <h2>3. Availability</h2>
+                    <p>We strive to keep the bot online 24/7, but we do not guarantee uninterrupted service. Maintenance may occur at any time.</p>
+
+                    <h2>4. Termination</h2>
+                    <p>We reserve the right to block any user or server from using the bot if they violate these terms.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
