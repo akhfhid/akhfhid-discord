@@ -11,7 +11,7 @@
 ![License](https://img.shields.io/badge/license-ISC-orange.svg)
 ![Status](https://img.shields.io/badge/status-active-success.svg)
 
-<img src="public/images/viewdiscord.png" alt="Dashboard View" width="100%" />
+<img src="./viewdiscord.png" alt="Dashboard View" width="100%" />
 
 </div>
 
