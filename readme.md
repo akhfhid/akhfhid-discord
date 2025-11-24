@@ -54,6 +54,12 @@ A robust, modular, and feature-rich Discord bot built with **Node.js** and **Dis
 
 1. **Clone the repository**
 
+   > [!IMPORTANT] > **Which branch should I clone?**
+   >
+   > - **`only-bot` (Recommended):** This branch is the **stable, plug-and-play version**. It runs immediately without requiring the Web Dashboard files.
+   > - **`main` (Advanced):** This branch includes the Web Dashboard code but **missing the `public` and `views` folders** (they are not pushed to GitHub).
+   >   - ⚠️ **Warning:** Running this branch _without_ manually creating/restoring these folders will cause **runtime errors** (e.g., `Failed to lookup view "index"`). Only use this if you have the dashboard assets.
+
    ```bash
    git clone -b only-bot https://github.com/akhfhid/akhfhid-discord.git
    cd akhfhid-discord
