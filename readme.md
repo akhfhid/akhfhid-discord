@@ -41,8 +41,8 @@ A robust, modular, and feature-rich Discord bot built with **Node.js** and **Dis
 1. **Clone the repository**
 
    ```bash
-   git clone -b only-bot https://github.com/akhfhid/akhfhid-bot-dc.git
-   cd akhfhid-bot-dc
+   git clone -b only-bot https://github.com/akhfhid/akhfhid-discord.git
+   cd akhfhid-discord
    ```
 
 2. **Install dependencies**
