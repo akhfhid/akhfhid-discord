@@ -21,8 +21,7 @@ A robust, modular, and feature-rich Discord bot built with **Node.js** and **Dis
 |                            | Level Up              | Automatic notifications upon leveling up with custom embeds.                                            |
 |                            | Leaderboard           | View the top 10 most active users with `!leaderboard`.                                                  |
 |                            | Rank Card             | Check current level and progress with `!level`.                                                         |
-| **Utilities & Moderation** | Web Dashboard         | Monitor bot and server statistics via an intuitive web dashboard.                                       |
-|                            | User Info             | Retrieve detailed user information with `!userinfo`.                                                    |
+| **Utilities & Moderation** | User Info             | Retrieve detailed user information with `!userinfo`.                                                    |
 |                            | Server Info           | View comprehensive server statistics with `!serverinfo`.                                                |
 |                            | Roblox Stalker        | Lookup Roblox user profiles and statistics with `!roblox`.                                              |
 |                            | Maintenance Mode      | Announce server maintenance with `!maintenance` and `!maintdone`.                                       |
