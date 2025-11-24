@@ -3,6 +3,7 @@
 # Akhfhid-Discord
 
 **[🌐 Web Dashboard](https://dashboard.akhfhid.my.id)**
+<img src="./viewdiscord.png" alt="Dashboard View" width="100%" />
 
 [![Invite Bot](https://img.shields.io/badge/Invite-Bot-7289DA?style=for-the-badge&logo=discord&logoColor=white)](https://discord.com/oauth2/authorize?client_id=1439201742599491694&permissions=8&scope=bot%20applications.commands)
 
@@ -10,8 +11,6 @@
 ![Discord.js](https://img.shields.io/badge/discord.js-v14-blue.svg)
 ![License](https://img.shields.io/badge/license-ISC-orange.svg)
 ![Status](https://img.shields.io/badge/status-active-success.svg)
-
-<img src="./viewdiscord.png" alt="Dashboard View" width="100%" />
 
 </div>
 
