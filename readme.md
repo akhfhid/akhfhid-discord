@@ -7,7 +7,7 @@
 </a>
 
 [![Invite Bot](https://img.shields.io/badge/Invite-Bot-7289DA?style=for-the-badge&logo=discord&logoColor=white)](https://discord.com/oauth2/authorize?client_id=1439201742599491694&permissions=8&scope=bot%20applications.commands)
-[![Web Dashboard](https://img.shields.io/badge/Web-Dashboard-4CAF50?style=for-the-badge&logo=google-chrome&logoColor=white)](https://dashboard.akhfhid.my.id)
+[![Web Dashboard](https://img.shields.io/badge/Web-Dashboard-4CAF50?style=for-the-badge&logo=google-chrome&logoColor=white)](https://discord.akhfhid.my.id)
 
 ![Node.js](https://img.shields.io/badge/node.js-16.9.0+-brightgreen.svg)
 ![Discord.js](https://img.shields.io/badge/discord.js-v14-blue.svg)
@@ -54,10 +54,19 @@ A robust, modular, and feature-rich Discord bot built with **Node.js** and **Dis
 
 1. **Clone the repository**
 
-   ```bash
-   git clone -b only-bot https://github.com/akhfhid/akhfhid-discord.git
-   cd akhfhid-discord
-   ```
+> [!IMPORTANT] > **Recommended: Clone the `only-bot` branch**  
+> This branch is the stable, plug-and-play version. It runs immediately and does not require the Web Dashboard files.
+
+> [!CAUTION] > **Avoid the `main` branch unless you are a developer**  
+> The `main` branch includes Web Dashboard code but is missing the `public` and `views` folders (they are not pushed to GitHub).  
+> Cloning `main` without manually restoring these assets will cause runtime errors such as `Failed to lookup view "index"`.
+
+**Run the following command to clone the stable `only-bot` branch:**
+
+```bash
+git clone -b only-bot https://github.com/akhfhid/akhfhid-discord.git
+cd akhfhid-discord
+```
 
 2. **Install dependencies**
 
