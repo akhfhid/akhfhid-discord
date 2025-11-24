@@ -1,6 +1,6 @@
 <div align="center">
 
-# akhfhid-bot-dc
+# Akhfhid-Discord
 
 **[🌐 Web Dashboard](https://dashboard.akhfhid.my.id)**
 
@@ -11,7 +11,7 @@
 ![License](https://img.shields.io/badge/license-ISC-orange.svg)
 ![Status](https://img.shields.io/badge/status-active-success.svg)
 
-![Dashboard View](public/images/viewdiscord.png)
+<img src="public/images/viewdiscord.png" alt="Dashboard View" width="100%" />
 
 </div>
 
