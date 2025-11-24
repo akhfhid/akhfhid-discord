@@ -7,7 +7,7 @@
 </a>
 
 [![Invite Bot](https://img.shields.io/badge/Invite-Bot-7289DA?style=for-the-badge&logo=discord&logoColor=white)](https://discord.com/oauth2/authorize?client_id=1439201742599491694&permissions=8&scope=bot%20applications.commands)
-[![Web Dashboard](https://img.shields.io/badge/Web-Dashboard-4CAF50?style=for-the-badge&logo=google-chrome&logoColor=white)](https://dashboard.akhfhid.my.id)
+[![Web Dashboard](https://img.shields.io/badge/Web-Dashboard-4CAF50?style=for-the-badge&logo=google-chrome&logoColor=white)](https://discord.akhfhid.my.id)
 
 ![Node.js](https://img.shields.io/badge/node.js-16.9.0+-brightgreen.svg)
 ![Discord.js](https://img.shields.io/badge/discord.js-v14-blue.svg)
