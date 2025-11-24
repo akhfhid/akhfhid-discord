@@ -9,7 +9,8 @@
 
 .page h2 {
     font-size: 2.5rem;
-    margin-bottom: 30px;
+    font-size: 2.5rem;
+    margin-bottom: 25px; /* Slightly reduced for better compactness */
     background: linear-gradient(to right, var(--text-primary), var(--text-secondary));
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
@@ -19,7 +20,21 @@
 .stats-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
     gap: 20px;
+    margin-bottom: 22px; /* Consistent spacing */
+}
+
+/* Mobile Stats Grid Configuration */
+@media (max-width: 768px) {
+    .stats-grid {
+        grid-template-columns: 1fr 1fr;
+    }
+    
+    /* Uptime Card (First Child) - Full Width */
+    .stats-grid .stat-card:nth-child(1) {
+        grid-column: span 2;
+    }
 }
 
 .stat-icon {
@@ -182,6 +197,8 @@
     margin-top: 30px;
     margin-bottom: 20px;
     border-bottom: 1px solid var(--border-color);
+    overflow-x: auto; /* Allow scroll for tabs if needed */
+    padding-bottom: 5px;
 }
 
 .doc-link {
@@ -196,6 +213,7 @@
     display: flex;
     align-items: center;
     gap: 8px;
+    white-space: nowrap;
 }
 
 .doc-link:hover,
@@ -215,6 +233,7 @@
 .doc-content {
     display: none;
     animation: fadeIn 0.5s ease-in-out;
+    max-width: 100%; /* Ensure it doesn't overflow */
 }
 
 .doc-content.active {
@@ -232,6 +251,7 @@
     color: var(--text-secondary);
     line-height: 1.7;
     margin-bottom: 15px;
+    word-wrap: break-word; /* Prevent long words from overflowing */
 }
 
 .doc-content code {
@@ -240,6 +260,7 @@
     border-radius: 6px;
     font-family: 'Courier New', Courier, monospace;
     color: var(--accent-color);
+    word-break: break-all; /* Break long codes */
 }
 
 .command-category h4 {
@@ -267,9 +288,10 @@
     background: var(--bg-secondary);
     padding: 15px;
     border-radius: 8px;
-    overflow-x: auto;
+    overflow-x: auto; /* Allow horizontal scroll for code blocks only */
     white-space: pre-wrap;
     word-wrap: break-word;
+    max-width: 100%;
 }
 
 .recent-activity {

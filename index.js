@@ -182,7 +182,7 @@ async function fetchStats() {
         popularCmd = cmd;
       }
     }
-    cachedStats.popularCommand = popularCmd !== "None" ? `${popularCmd} (${maxUsage})` : "None";
+    cachedStats.popularCommand = popularCmd !== "None" ? `${popularCmd} ` : "None";
 
 
     console.log('Statistik dashboard berhasil diupdate!');
@@ -313,46 +313,46 @@ client.on("messageCreate", async (message) => {
   }
 });
 
-function loadLevelData() {
-  if (!fs.existsSync(levelDataPath)) {
-    fs.writeFileSync(levelDataPath, "{}", "utf8");
-    return {};
-  }
+let levelCache = {};
+if (fs.existsSync(levelDataPath)) {
   try {
-    return JSON.parse(fs.readFileSync(levelDataPath, "utf8"));
-  } catch (error) {
-    console.error("Gagal memuat data level, membuat file baru...", error);
-    fs.writeFileSync(levelDataPath, "{}", "utf8");
-    return {};
+    levelCache = JSON.parse(fs.readFileSync(levelDataPath, "utf8"));
+  } catch (e) {
+    console.error("Failed to load level data:", e);
+    levelCache = {};
   }
 }
 
-function saveLevelData(data) {
-  fs.writeFileSync(levelDataPath, JSON.stringify(data, null, 2), "utf8");
+function saveLevelDataAsync() {
+  fs.writeFile(levelDataPath, JSON.stringify(levelCache, null, 2), "utf8", (err) => {
+    if (err) console.error("Failed to save level data:", err);
+  });
 }
+
+// Save level data every 60 seconds
+setInterval(saveLevelDataAsync, 60 * 1000);
 
 client.on("messageCreate", async (message) => {
   if (message.author.bot) return;
   if (message.guild) {
-    const levelData = loadLevelData();
     const guildId = message.guild.id;
     const userId = message.author.id;
 
-    if (!levelData[guildId]) {
-      levelData[guildId] = {};
+    if (!levelCache[guildId]) {
+      levelCache[guildId] = {};
     }
 
-    if (!levelData[guildId][userId]) {
-      levelData[guildId][userId] = {
+    if (!levelCache[guildId][userId]) {
+      levelCache[guildId][userId] = {
         xp: 0,
         level: 0,
         lastMessage: 0,
       };
     }
 
-    const user = levelData[guildId][userId];
+    const user = levelCache[guildId][userId];
     const now = Date.now();
-    const cooldown = 600;
+    const cooldown = 60000; // 1 minute cooldown
 
     if (now - user.lastMessage > cooldown) {
       const xpToGive = Math.floor(Math.random() * 11) + 15;
@@ -380,9 +380,7 @@ client.on("messageCreate", async (message) => {
 
         await message.channel.send({ embeds: [levelUpEmbed] });
       }
-
-      saveLevelData(levelData);
-      console.log(`XP: ${user.xp}, Level: ${user.level}`);
+      // console.log(`XP: ${user.xp}, Level: ${user.level}`); // Reduced logging
     }
   }
 });
@@ -616,6 +614,9 @@ client.on("interactionCreate", async (interaction) => {
         });
       }
     } else if (customId.includes("_")) {
+      // Ignore perplexity buttons handled by collectors
+      if (["prev_source", "next_source", "delete_source"].includes(customId)) return;
+
       const [, type, messageId] = customId.split("_");
       const userData = stalkerData.get(messageId);
 

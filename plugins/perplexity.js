@@ -119,29 +119,35 @@ module.exports = {
                 embeds: [getPageEmbed(page)],
                 components: [getButtons()]
             });
+
             const collector = sourceMsg.createMessageComponentCollector({
-                time: 5 * 60 * 1000
+                filter: (i) => i.user.id === message.author.id,
+                time: 300000 // 5 minutes
             });
 
-            collector.on("collect", async (btn) => {
-                if (btn.user.id !== message.author.id)
-                    return btn.reply({ content: "Ini bukan command kamu!", ephemeral: true });
-
-                if (btn.customId === "prev_source") page--;
-                if (btn.customId === "next_source") page++;
-                if (btn.customId === "delete_source") {
+            collector.on('collect', async (interaction) => {
+                if (interaction.customId === 'prev_source') {
+                    page = Math.max(0, page - 1);
+                    await interaction.update({
+                        embeds: [getPageEmbed(page)],
+                        components: [getButtons()]
+                    });
+                } else if (interaction.customId === 'next_source') {
+                    page = Math.min(totalPage - 1, page + 1);
+                    await interaction.update({
+                        embeds: [getPageEmbed(page)],
+                        components: [getButtons()]
+                    });
+                } else if (interaction.customId === 'delete_source') {
+                    await interaction.message.delete();
                     collector.stop();
-                    return sourceMsg.delete().catch(() => { });
                 }
-
-                await btn.update({
-                    embeds: [getPageEmbed(page)],
-                    components: [getButtons()]
-                });
             });
 
-            collector.on("end", () => {
-                sourceMsg.edit({ components: [] }).catch(() => { });
+            collector.on('end', () => {
+                if (sourceMsg.editable) {
+                    sourceMsg.edit({ components: [] }).catch(() => { });
+                }
             });
 
         } catch (err) {

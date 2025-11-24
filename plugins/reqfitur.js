@@ -3,7 +3,7 @@ module.exports = {
     description: "Mengirim request fitur ke channel khusus",
     run: async (client, message, args) => {
 
-        const requestChannelId = "1439728878217072782";
+        const requestChannelId = "1442096482244104314";
 
         const requestText = args.join(" ");
         if (!requestText)

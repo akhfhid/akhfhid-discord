@@ -4,63 +4,119 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Akhfhid Bot - Dashboard</title>
 
+    <!-- SEO BASIC -->
+    <title>Akhfhid Bot – Powerful Discord Music Bot & Automation Dashboard</title>
+    <meta name="description"
+        content="Akhfhid adalah Discord Music Bot ringan dengan fitur AI canggih (Perplexity), Roblox Stalker, dan dashboard web interaktif. Kelola server Anda dengan mudah dan gratis." />
+    <meta name="keywords"
+        content="Discord bot, music bot discord, discord music bot Indonesia, Akhfhid bot, dashboard discord bot, AI discord bot, Perplexity AI discord, Roblox stalker discord, bot musik terbaik, discord automation" />
+    <meta name="author" content="Akhfhid Team" />
+    <link rel="canonical" href="https://akhfhid.my.id/" />
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:title" content="Akhfhid Bot – Discord Music Bot + Dashboard" />
+    <meta property="og:description"
+        content="Bot Music stabil dengan integrasi AI dan Dashboard Web. Putar musik berkualitas tinggi, riset dengan AI, dan pantau aktivitas server secara real-time." />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://akhfhid.my.id/" />
+    <meta property="og:image" content="https://akhfhid.my.id/images/akhfhid.png" />
+
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Akhfhid Bot – Powerful Discord Music Bot & Automation Dashboard" />
+    <meta name="twitter:description"
+        content="Bot Music stabil dengan integrasi AI dan Dashboard Web. Putar musik berkualitas tinggi, riset dengan AI, dan pantau aktivitas server secara real-time." />
+    <meta name="twitter:image" content="https://akhfhid.my.id/images/akhfhid.png" />
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="/images/akhfhid.ico" />
     <link rel="stylesheet" href="css/variables.css" />
     <link rel="stylesheet" href="css/base.css" />
     <link rel="stylesheet" href="css/layout.css" />
     <link rel="stylesheet" href="css/components.css" />
     <link rel="stylesheet" href="css/animations.css" />
     <link rel="stylesheet" href="css/pages.css" />
+
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap"
+    <link
+        href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap"
         rel="stylesheet" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+
+    <link rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
 </head>
 
 <body>
-    <div class="container">
-        <%- include('partials/sidebar') %>
+    <div class="app-container">
+        <aside class="sidebar-container">
+            <%- include('partials/sidebar') %>
+        </aside>
 
-            <div class="right-panel">
-                <nav class="main-nav">
-                    <ul>
-                        <li class="nav-link active" data-target="dashboard">
-                            <i class="fas fa-tachometer-alt"></i> Dashboard
-                        </li>
-                        <li class="nav-link" data-target="features">
-                            <i class="fas fa-star"></i> Features
-                        </li>
-                        <li class="nav-link" data-target="documentation">
-                            <i class="fas fa-book"></i> Documentation
-                        </li>
-                        <li class="nav-link" data-target="support">
-                            <i class="fas fa-headset"></i> Support
-                        </li>
-                        <li class="nav-link">
-                            <a href="/term-of-service" style="text-decoration: none; color: inherit;">
-                                <i class="fas fa-file-contract"></i>
-                            </a>
-                        </li>
-                        <li class="nav-link">
-                            <a href="/privacy-policy" style="text-decoration: none; color: inherit;">
-                                <i class="fas fa-user-shield"></i> 
-                            </a>
-                        </li>
-                    </ul>
-                </nav>
+        <main class="main-content" id="mainContent">
+            <nav class="main-nav">
+                <ul class="nav-list">
+                    <li class="nav-link active" data-target="dashboard">
+                        <i class="fas fa-tachometer-alt"></i> Dashboard
+                    </li>
+                    <li class="nav-link" data-target="features">
+                        <i class="fas fa-star"></i> Features
+                    </li>
+                    <li class="nav-link" data-target="documentation">
+                        <i class="fas fa-book"></i> Documentation
+                    </li>
+                    <li class="nav-link" data-target="support">
+                        <i class="fas fa-headset"></i> Support
+                    </li>
+                    <!-- <li class="nav-link">
+                        <a href="/term-of-service" class="external-link">
+                            <i class="fas fa-file-contract"></i>
+                        </a>
+                    </li>
+                    <li class="nav-link">
+                        <a href="/privacy-policy" class="external-link">
+                            <i class="fas fa-user-shield"></i>
+                        </a>
+                    </li> -->
+                </ul>
+            </nav>
 
-                <div class="content-area">
-                    <%- include('partials/dashboard') %>
-                        <%- include('partials/features') %>
-                            <%- include('partials/documentation') %>
-                                <%- include('partials/support') %>
-                </div>
+            <div class="content-wrapper">
+                <%- include('partials/dashboard') %>
+                <%- include('partials/features') %>
+                <%- include('partials/documentation') %>
+                <%- include('partials/support') %>
             </div>
+        </main>
+
+        <!-- Bottom Navigation (Mobile Only) -->
+        <nav class="bottom-nav">
+            <div class="bottom-nav-item active" data-target="home">
+                <i class="fas fa-home"></i>
+                <span>Home</span>
+            </div>
+            <div class="bottom-nav-item" data-target="dashboard">
+                <i class="fas fa-tachometer-alt"></i>
+                <span>Dashboard</span>
+            </div>
+            <div class="bottom-nav-item" data-target="features">
+                <i class="fas fa-star"></i>
+                <span>Features</span>
+            </div>
+            <div class="bottom-nav-item" data-target="documentation">
+                <i class="fas fa-book"></i>
+                <span>Docs</span>
+            </div>
+            <div class="bottom-nav-item" data-target="support">
+                <i class="fas fa-headset"></i>
+                <span>Support</span>
+            </div>
+        </nav>
     </div>
 
     <script src="js/main.js"></script>
+    <script src="js/mobile-nav.js"></script>
     <script src="js/navigation.js"></script>
     <script src="js/stats.js"></script>
 </body>

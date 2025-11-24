@@ -125,7 +125,7 @@
     border: 1px solid var(--border-color);
     border-radius: 16px;
     backdrop-filter: blur(10px);
-    /* flex-wrap: wrap; */
+    flex-wrap: wrap; /* Allow wrapping */
     /* Agak fleksibel jika layar kecil */
     margin-bottom: 22px;
 
@@ -133,21 +133,25 @@
 
 .activity-metrics-panel {
     display: flex;
-    justify-content: center;
-    gap: 30px;
-    /* margin-bottom: 10px; */
+    justify-content: space-between; /* Spread items evenly */
+    gap: 20px;
+    flex-wrap: wrap;
+    margin-bottom: 22px; /* Match system-info-panel */
     padding: 20px;
+    background: var(--bg-card); /* Add background */
+    border: 1px solid var(--border-color); /* Add border */
+    border-radius: 16px; /* Add border-radius */
     backdrop-filter: blur(10px);
+    width: 100%; /* Ensure full width */
 }
 
-.metric-item {
     display: flex;
     align-items: center;
     gap: 15px;
-    padding: 15px 25px;
-    background: rgba(255, 255, 255, 0.03);
-    border: 1px solid var(--border-color);
-    border-radius: 50px;
+    padding: 10px 15px;
+    /* background: rgba(255, 255, 255, 0.03); */ /* Removed background */
+    /* border: 1px solid var(--border-color); */ /* Removed border */
+    /* border-radius: 50px; */ /* Removed border-radius */
     /* Bentuk pil */
     transition: all 0.3s ease;
 }
@@ -196,4 +200,48 @@
     background: var(--bg-card);
     border-radius: 12px;
     border: 1px solid var(--border-color);
+}
+
+/* --- Mobile Specific Overrides --- */
+@media (max-width: 1024px) {
+    .activity-metrics-panel {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 15px;
+    }
+
+    .metric-item {
+        width: 100%;
+        justify-content: flex-start;
+        border-radius: 16px; /* Slightly less rounded for grid fit */
+        padding: 15px;
+    }
+    
+    .metric-item i {
+        font-size: 1.5rem;
+    }
+
+    .metric-details h4 {
+        font-size: 0.7rem;
+    }
+
+    .metric-details p {
+        font-size: 0.85rem;
+    }
+    .metric-details p {
+        font-size: 0.85rem;
+    }
+}
+
+/* --- Two Column Wrapper --- */
+.two-column-wrapper {
+    display: flex;
+    gap: 20px;
+    margin-bottom: 22px;
+}
+
+@media (max-width: 1024px) {
+    .two-column-wrapper {
+        flex-direction: column;
+    }
 }
