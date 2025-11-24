@@ -1,12 +1,19 @@
+<div align="center">
+
 # akhfhid-bot-dc
 
 **[🌐 Web Dashboard](https://dashboard.akhfhid.my.id)**
 
 [![Invite Bot](https://img.shields.io/badge/Invite-Bot-7289DA?style=for-the-badge&logo=discord&logoColor=white)](https://discord.com/oauth2/authorize?client_id=1439201742599491694&permissions=8&scope=bot%20applications.commands)
+
 ![Node.js](https://img.shields.io/badge/node.js-16.9.0+-brightgreen.svg)
 ![Discord.js](https://img.shields.io/badge/discord.js-v14-blue.svg)
 ![License](https://img.shields.io/badge/license-ISC-orange.svg)
 ![Status](https://img.shields.io/badge/status-active-success.svg)
+
+![Dashboard View](public/images/viewdiscord.png)
+
+</div>
 
 A robust, modular, and feature-rich Discord bot built with **Node.js** and **Discord.js v14**. This bot is designed for easy extensibility and comes equipped with essential features for modern Discord servers.
 
