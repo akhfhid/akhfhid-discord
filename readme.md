@@ -54,10 +54,12 @@ A robust, modular, and feature-rich Discord bot built with **Node.js** and **Dis
 
 1. **Clone the repository**
 
-> [!IMPORTANT] > **Recommended: Clone the `only-bot` branch**  
+  > [!IMPORTANT]
+> **Recommended: Clone the `only-bot` branch**  
 > This branch is the stable, plug-and-play version. It runs immediately and does not require the Web Dashboard files.
 
-> [!CAUTION] > **Avoid the `main` branch unless you are a developer**  
+> [!CAUTION]
+> **Avoid the `main` branch unless you are a developer**  
 > The `main` branch includes Web Dashboard code but is missing the `public` and `views` folders (they are not pushed to GitHub).  
 > Cloning `main` without manually restoring these assets will cause runtime errors such as `Failed to lookup view "index"`.
 
