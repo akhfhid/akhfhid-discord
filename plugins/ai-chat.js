@@ -46,7 +46,7 @@ module.exports = {
           )
           .setFooter({ text: `Requested by ${message.author.tag}` })
           .setTimestamp();
-        loadingMsg.edit({ embeds: [updated] }).catch(() => {});
+        loadingMsg.edit({ embeds: [updated] }).catch(() => { });
       }, 1000);
 
       const text = args.join(" ");
@@ -96,9 +96,8 @@ Tentang user yang kamu sebut (${targetUser.user.username}):
         .slice(0, 50) // batas biar tidak terlalu panjang
         .join(", ");
       const systemPrompt = `
-Kamu adalah akhfhid, asisten AI yang ramah, realistis, dan sosial, tinggal di server Discord "${
-        message.guild.name
-      }".
+Kamu adalah akhfhid, asisten AI yang ramah, realistis, dan sosial, tinggal di server Discord "${message.guild.name
+        }".
 Kamu sedang berbicara dengan ${message.author.username}.
 
 ${targetInfo ? targetInfo : ""}
@@ -168,7 +167,7 @@ ${chatContext}
       try {
         clearInterval(timer);
         if (loadingMsg) await loadingMsg.delete();
-      } catch {}
+      } catch { }
 
       const errorEmbed = new EmbedBuilder()
         .setColor("#FF0000")
