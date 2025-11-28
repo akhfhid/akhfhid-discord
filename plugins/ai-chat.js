@@ -15,7 +15,7 @@ module.exports = {
         .setDescription("Send a message after the command !")
         .addFields({
           name: "Example",
-          value: `\`${process.env.PREFIX || "!"}ai hai perkenalkan dirimu \``,
+          value: `\`${process.env.PREFIX || "!"}chat hai perkenalkan dirimu \``,
         });
       return message.reply({ embeds: [errorEmbed] });
     }
@@ -93,7 +93,7 @@ Tentang user yang kamu sebut (${targetUser.user.username}):
         .join("\n");
       const allMembers = message.guild.members.cache
         .map((m) => m.user.username)
-        .slice(0, 50) // batas biar tidak terlalu panjang
+        .slice(0, 50)
         .join(", ");
       const systemPrompt = `
 Kamu adalah akhfhid, asisten AI yang ramah, realistis, dan sosial, tinggal di server Discord "${message.guild.name
@@ -134,7 +134,7 @@ ${chatContext}
         sessionId: message.author.id,
       };
 
-      const response = await axios.post(`${akhfhid}/ai/gpt/5-nano`, data, {
+      const response = await axios.post(`${akhfhid}/text-generation/gpt/5-nano`, data, {
         headers: { "Content-Type": "application/json" },
       });
 

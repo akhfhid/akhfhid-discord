@@ -17,7 +17,7 @@ module.exports = {
             .setDescription(`Sedang mencari informasi tentang:\n**${query}**`)
             .setTimestamp()
             .addFields(
-                { name: '⏱️ Durasi', value: `0 detik`, inline: true },
+                { name: '⏱️ Duration', value: `0 Sec`, inline: true },
                 { name: '📊 Status', value: `Menghubungi API...`, inline: true }
             )
             .setTimestamp()
@@ -29,7 +29,7 @@ module.exports = {
             seconds++;
             const updated = EmbedBuilder.from(loadingEmbed)
                 .setFields(
-                    { name: '⏱️ Durasi', value: `${seconds} detik`, inline: true },
+                    { name: '⏱️ Duration', value: `${seconds} Sec`, inline: true },
                     { name: '📊 Status', value: `Memproses data...`, inline: true }
                 )
                 .setTimestamp()
@@ -39,7 +39,7 @@ module.exports = {
 
         try {
             const res = await axios.get(
-                `${akhfhid}/ai/perplexity?query=${encodeURIComponent(query)}&web=true&academic=true&social=true&finance=true`
+                `${akhfhid}/text-generation/perplexity?query=${encodeURIComponent(query)}&web=true&academic=true&social=true&finance=true`
             );
 
             clearInterval(timer);
@@ -65,7 +65,7 @@ module.exports = {
                 .setDescription(result.response.answer.substring(0, 1800))
                 .addFields(
                     { name: "🔍 Related", value: result.related_queries.slice(0, 3).join("\n• ") || "-" },
-                    { name: "⏱️ Durasi", value: `${seconds} detik`, inline: true }
+                    { name: "⏱️ Duration", value: `${seconds} Sec`, inline: true }
                 )
                 .setTimestamp()
                 .setFooter({ text: 'Requested by ' + `${message.author.tag}` + `ID: ${result.id}` || 'User' });
@@ -160,7 +160,7 @@ module.exports = {
                     new EmbedBuilder()
                         .setColor("Red")
                         .setTitle("API Error")
-                        .setDescription("Terjadi kesalahan saat menghubungi API.")
+                        .setDescription("An error occurred while connecting to the API, try again later.")
                 ]
             });
         }
