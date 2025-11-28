@@ -208,7 +208,6 @@ module.exports = {
                     prompt = modalSubmit.fields.getTextInputValue("custom_prompt_input");
                     label = "Custom Style";
 
-                    // Use the modal interaction for updates from now on
                     interaction = modalSubmit;
                 } catch (e) {
                     return; // Modal timed out or error

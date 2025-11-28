@@ -12,7 +12,6 @@ const ffmpegPath = require('ffmpeg-static');
 const queues = new Map();
 const akhfhid = process.env.BASE_API;
 
-// Ensure ffmpeg path is set for @discordjs/voice if needed
 process.env.FFMPEG_PATH = ffmpegPath;
 
 function createSongEmbed(metadata, type = 'play') {
@@ -129,12 +128,10 @@ module.exports = {
                 const player = createAudioPlayer();
                 connection.subscribe(player);
 
-                // DEBUG: Monitor Voice Connection State
                 connection.on('stateChange', (oldState, newState) => {
                     console.log(`Connection transitioned from ${oldState.status} to ${newState.status}`);
                 });
 
-                // DEBUG: Monitor Audio Player State
                 player.on('stateChange', (oldState, newState) => {
                     console.log(`Audio player transitioned from ${oldState.status} to ${newState.status}`);
                 });
