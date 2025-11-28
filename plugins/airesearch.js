@@ -39,7 +39,7 @@ module.exports = {
         }, 1000);
 
         try {
-            const response = await axios.get(`${akhfhid}/ai/ai-research?text=${encodeURIComponent(query)}`);
+            const response = await axios.get(`${akhfhid}/text-generation/ai-research?text=${encodeURIComponent(query)}`);
             const data = response.data;
             clearInterval(timer);
             loadingMessage.delete().catch(console.error);

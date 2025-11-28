@@ -1,0 +1,318 @@
+.page {
+    display: none;
+    animation: fadeIn 0.5s ease-in-out;
+}
+
+.page.active {
+    display: block;
+}
+
+.page h2 {
+    font-size: 2.5rem;
+    font-size: 2.5rem;
+    margin-bottom: 25px; /* Slightly reduced for better compactness */
+    background: linear-gradient(to right, var(--text-primary), var(--text-secondary));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+/* --- Dashboard Page --- */
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 20px;
+    margin-bottom: 22px; /* Consistent spacing */
+}
+
+/* Mobile Stats Grid Configuration */
+@media (max-width: 768px) {
+    .stats-grid {
+        grid-template-columns: 1fr 1fr;
+    }
+    
+    /* Uptime Card (First Child) - Full Width */
+    .stats-grid .stat-card:nth-child(1) {
+        grid-column: span 2;
+    }
+}
+
+.stat-icon {
+    font-size: 2.5rem;
+    color: var(--accent-color);
+}
+
+.stat-info h3 {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    font-weight: 500;
+    margin-bottom: 5px;
+}
+
+.stat-info p {
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.info-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    color: var(--text-secondary);
+    flex: 1;
+    /* Agar setiap item mengambil ruang yang sama */
+    min-width: 150px;
+    /* Minimal lebar agar tidak terlalu menciut */
+}
+
+.info-item i {
+    font-size: 1.2rem;
+    color: var(--accent-color);
+    opacity: 0.8;
+
+}
+
+.info-details h4 {
+    font-size: 0.75rem;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin: 0;
+    color: var(--text-secondary);
+}
+
+.info-details p {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin: 2px 0 0 0;
+}
+
+/* Pastikan tidak ada scroll di layar besar */
+/* @media (min-width: 1200px) {
+    .system-info-panel {
+        flex-wrap: nowrap;
+    }
+} */
+
+.metric-item i {
+    font-size: 1.2rem;
+    color: var(--accent-color);
+}
+
+.metric-details h4 {
+    font-size: 0.75rem;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin: 0;
+    color: var(--text-secondary);
+}
+
+.metric-details p {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin: 2px 0 0 0;
+}
+
+/* Animasi Indikator Status */
+#status-indicator {
+    color: #fbbf24;
+    /* Kuning untuk 'Menghubungkan' */
+    animation: pulse 2s infinite;
+}
+
+#status-indicator.online {
+    color: #10b981;
+    /* Hijau untuk 'Online' */
+    animation: none;
+}
+
+#status-indicator.offline {
+    color: #ef4444;
+    /* Merah untuk 'Offline' */
+    animation: none;
+}
+
+/* --- Features Page --- */
+.feature-list {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.feature-item i {
+    font-size: 2rem;
+    color: var(--accent-color);
+    margin-top: 5px;
+}
+
+.feature-text h3 {
+    font-size: 1.2rem;
+    margin-bottom: 5px;
+}
+
+.feature-text p {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+}
+
+/* --- Documentation Page --- */
+.doc-links {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 20px;
+    margin-top: 30px;
+}
+
+.doc-links a {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    background: var(--bg-card);
+    backdrop-filter: blur(10px);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 20px;
+    text-decoration: none;
+    color: var(--text-primary);
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.doc-links a:hover {
+    background: var(--accent-color);
+    transform: translateY(-3px);
+}
+
+.doc-links a i {
+    font-size: 1.5rem;
+}
+
+.doc-sub-nav {
+    display: flex;
+    gap: 15px;
+    margin-top: 30px;
+    margin-bottom: 20px;
+    border-bottom: 1px solid var(--border-color);
+    overflow-x: auto; /* Allow scroll for tabs if needed */
+    padding-bottom: 5px;
+}
+
+.doc-link {
+    padding: 12px 20px;
+    cursor: pointer;
+    color: var(--text-secondary);
+    font-weight: 500;
+    transition: all 0.3s ease;
+    border-bottom: 3px solid transparent;
+    margin-bottom: -1px;
+    /* Menutupi border bawah */
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    white-space: nowrap;
+}
+
+.doc-link:hover,
+.doc-link.active {
+    color: var(--text-primary);
+    border-bottom-color: var(--accent-color);
+}
+
+.doc-link i {
+    margin-right: 5px;
+}
+
+.doc-content-area {
+    margin-top: 20px;
+}
+
+.doc-content {
+    display: none;
+    animation: fadeIn 0.5s ease-in-out;
+    max-width: 100%; /* Ensure it doesn't overflow */
+}
+
+.doc-content.active {
+    display: block;
+}
+
+.doc-content h3 {
+    font-size: 1.8rem;
+    margin-bottom: 20px;
+    color: var(--text-primary);
+}
+
+.doc-content p,
+.doc-content li {
+    color: var(--text-secondary);
+    line-height: 1.7;
+    margin-bottom: 15px;
+    word-wrap: break-word; /* Prevent long words from overflowing */
+}
+
+.doc-content code {
+    background: var(--bg-card);
+    padding: 3px 8px;
+    border-radius: 6px;
+    font-family: 'Courier New', Courier, monospace;
+    color: var(--accent-color);
+    word-break: break-all; /* Break long codes */
+}
+
+.command-category h4 {
+    color: var(--accent-color);
+    margin-bottom: 15px;
+    font-size: 1.1rem;
+}
+
+.command-category ul {
+    list-style: none;
+    padding-left: 0;
+}
+
+.command-category li {
+    margin-bottom: 10px;
+}
+
+.api-endpoint h4,
+.faq-item h4 {
+    color: var(--accent-color);
+    margin-bottom: 10px;
+}
+
+.api-endpoint pre {
+    background: var(--bg-secondary);
+    padding: 15px;
+    border-radius: 8px;
+    overflow-x: auto; /* Allow horizontal scroll for code blocks only */
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    max-width: 100%;
+}
+
+.recent-activity {
+    flex: 2;
+}
+
+.announcement-box {
+    flex: 1;
+}
+
+.recent-activity ul {
+    padding-left: 0;
+    list-style: none;
+    color: var(--text-secondary);
+}
+
+.announcement-box p {
+    color: var(--text-secondary);
+}
+
+/* --- Support Page --- */
+#support .cta-button {
+    margin-top: 20px;
+}
