@@ -9,6 +9,8 @@ const {
   ButtonStyle,
   StringSelectMenuBuilder,
 } = require("discord.js");
+const { checkToxic, generateText } = require("./utils/aiHelper");
+const { buildContext } = require("./utils/contextHelper");
 const { YtDlpPlugin } = require("@distube/yt-dlp");
 const ffmpeg = require("ffmpeg-static");
 
@@ -270,7 +272,36 @@ client.on("messageCreate", async (message) => {
 ┃ 💬 Message   : ${message.content}
 ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`
   );
+
+
+  // AI Moderation
+  if (message.content) {
+    const isToxic = await checkToxic(message.content);
+    if (isToxic) {
+      try {
+        await message.delete();
+        const warningMsg = await message.channel.send(`${message.author}, pesan kamu dihapus karena mengandung kata-kata kasar/toxic.`);
+        setTimeout(() => warningMsg.delete().catch(() => { }), 5000);
+        return;
+      } catch (err) {
+        console.error("Failed to delete toxic message:", err);
+      }
+    }
+  }
+
+  // Smart Reply
   const prefix = process.env.PREFIX || "!";
+  if (message.mentions.has(client.user) && !message.content.startsWith(prefix)) {
+    try {
+      await message.channel.sendTyping();
+      const { text, systemPrompt } = await buildContext(client, message);
+      const responseData = await generateText(text, systemPrompt, message.author.id);
+      await message.reply(responseData.result);
+      return;
+    } catch (error) {
+      console.error("Smart Reply Error:", error);
+    }
+  }
 
   const fakeCmd = message.content.split(" ")[0] || "message";
   addActivity(`User ${maskUsername(message.author.username)} run command `, "command");
