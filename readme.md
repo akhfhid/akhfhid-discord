@@ -25,8 +25,11 @@ A robust, modular, and feature-rich Discord bot built with **Node.js** and **Dis
 | Category                   | Feature               | Description                                                                                             |
 | :------------------------- | :-------------------- | :------------------------------------------------------------------------------------------------------ |
 | **AI Capabilities**        | AI Chat               | Interact with an intelligent AI assistant using `!ai` or `!chat`.                                       |
+|                            | Smart Reply           | The bot automatically replies when mentioned, using the conversation context.                           |
+|                            | AI Moderation         | Automatically detects and deletes toxic or offensive messages, warning the user.                        |
+|                            | AI Summarizer         | Summarize channel activity with `!summary` or `!rangkum`.                                               |
 |                            | AI Research           | Conduct deep research on any topic using Perplexity AI integration with `!airesearch` or `!perplexity`. |
-|                            | Source Citations      | AI responses include citations and sources for verification purposes.                                   |
+|                            | Image Transformation  | Transform images using various AI styles with `!img2img`.                                               |
 | **Music System**           | High Quality Playback | Powered by **DisTube** and **ffmpeg** for superior audio quality.                                       |
 |                            | Commands              | `!play`, `!queue`, `!skip`, `!stop` to manage music playback.                                           |
 |                            | Supported Sources     | Supports YouTube, SoundCloud, Spotify, and more.                                                        |
@@ -43,6 +46,42 @@ A robust, modular, and feature-rich Discord bot built with **Node.js** and **Dis
 | **Automation**             | Scheduled Messages    | Configure daily automated messages (e.g., morning greetings) with `!setschedule`.                       |
 |                            | Welcome System        | Customizable welcome messages for new members.                                                          |
 
+## AI Image Transformation (img2img)
+
+The `!img2img` command allows users to transform images into various artistic styles using AI.
+
+**Usage:**
+
+1. Upload an image and add the caption `!img2img`.
+2. Or use `!img2img <image_url>`.
+3. Select a style from the dropdown menu.
+
+### Available Styles
+
+Below are the available templates and their expected outputs.
+
+#### Default Input Example
+
+*(Placeholder for default input image)*
+
+| Style Template | Description | Output Example |
+| :--- | :--- | :--- |
+| **Photobox Style** | Modern photobox booth aesthetic with soft lighting and pastel background. | *(Placeholder for Photobox output)* |
+| **Photobox Romantic** | Romantic aesthetic with warm nostalgic filter and polaroid frame. | *(Placeholder for Photobox Romantic output)* |
+| **Aesthetic Waterfall** | Natural waterfall environment with soft misty water effects. | *(Placeholder for Waterfall output)* |
+| **Pixel Art Waterfall** | Pixel art rendition of a natural waterfall scene. | *(Placeholder for Pixel Waterfall output)* |
+| **Fantasy Studio Photo** | Dreamy fantasy studio setting with magical glowing lights. | *(Placeholder for Fantasy Studio output)* |
+| **Elegant Portrait** | Artistic and clean elegant portrait with smooth shading. | *(Placeholder for Elegant Portrait output)* |
+| **Studio Modeling** | Professional fashion model pose with clean monochrome background. | *(Placeholder for Studio Modeling output)* |
+| **Gaming Setup** | RGB gaming setup with neon lighting and dual monitors. | *(Placeholder for Gaming Setup output)* |
+| **Pixel Art Night Coding** | Pixel art character coding at night with moonlight. | *(Placeholder for Pixel Night Coding output)* |
+| **Cozy Reading** | Relaxing scene reading a book in a warm, cozy room. | *(Placeholder for Cozy Reading output)* |
+| **Pixel Art** | Retro pixel art style conversion. | *(Placeholder for Pixel Art output)* |
+| **Anime Style** | High-quality anime character conversion. | *(Placeholder for Anime output)* |
+| **Cyberpunk** | Futuristic cyberpunk aesthetic with neon lights. | *(Placeholder for Cyberpunk output)* |
+| **Realistic** | Photorealistic 8k resolution interpretation. | *(Placeholder for Realistic output)* |
+| **Watercolor** | Soft watercolor painting style with pastel colors. | *(Placeholder for Watercolor output)* |
+
 ## Installation
 
 ### Prerequisites
@@ -55,20 +94,20 @@ A robust, modular, and feature-rich Discord bot built with **Node.js** and **Dis
 1. **Clone the repository**
 
   > [!IMPORTANT]
-> **Recommended: Clone the `only-bot` branch**  
-> This branch is the stable, plug-and-play version. It runs immediately and does not require the Web Dashboard files.
+  > **Recommended: Clone the `only-bot` branch**  
+  > This branch is the stable, plug-and-play version. It runs immediately and does not require the Web Dashboard files.
 
-> [!CAUTION]
-> **Avoid the `main` branch unless you are a developer**  
-> The `main` branch includes Web Dashboard code but is missing the `public` and `views` folders (they are not pushed to GitHub).  
-> Cloning `main` without manually restoring these assets will cause runtime errors such as `Failed to lookup view "index"`.
+  > [!CAUTION]
+  > **Avoid the `main` branch unless you are a developer**  
+  > The `main` branch includes Web Dashboard code but is missing the `public` and `views` folders (they are not pushed to GitHub).  
+  > Cloning `main` without manually restoring these assets will cause runtime errors such as `Failed to lookup view "index"`.
 
-**Run the following command to clone the stable `only-bot` branch:**
+  **Run the following command to clone the stable `only-bot` branch:**
 
-```bash
-git clone -b only-bot https://github.com/akhfhid/akhfhid-discord.git
-cd akhfhid-discord
-```
+  ```bash
+  git clone -b only-bot https://github.com/akhfhid/akhfhid-discord.git
+  cd akhfhid-discord
+  ```
 
 2. **Install dependencies**
 
@@ -87,6 +126,7 @@ cd akhfhid-discord
    ```
 
 4. **Start the Bot**
+
    ```bash
    node index.js
    ```
@@ -134,6 +174,7 @@ If you do not have a Discord bot yet, follow these steps to create one:
 - `plugins/`: Contains all text-based commands (prefix commands).
 - `slash/`: Contains Slash Command definitions.
 - `data/`: Stores JSON data for levels, schedules, etc.
+- `utils/`: Utility functions for AI and other helpers.
 
 ## Author
 
