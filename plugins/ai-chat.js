@@ -15,7 +15,7 @@ module.exports = {
         .setDescription("Send a message after the command !")
         .addFields({
           name: "Example",
-          value: `\`${process.env.PREFIX || "!"}chat hai perkenalkan dirimu \``,
+          value: `\`${process.env.PREFIX || "!"}chat introduce urself \``,
         });
       return message.reply({ embeds: [errorEmbed] });
     }

@@ -9,7 +9,6 @@ module.exports = {
     run: async (client, message, args) => {
         let channel = message.channel;
 
-        // Check if a channel is mentioned or ID is provided
         if (args.length > 0) {
             const channelId = args[0].replace(/[<#>]/g, "");
             const targetChannel = message.guild.channels.cache.get(channelId);

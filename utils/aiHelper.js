@@ -1,7 +1,7 @@
 const axios = require("axios");
 require("dotenv").config();
 
-const BASE_API = process.env.BASE_API;
+const akhfhid = process.env.akhfhid;
 
 async function generateText(text, systemPrompt, sessionId) {
     try {
@@ -11,7 +11,7 @@ async function generateText(text, systemPrompt, sessionId) {
             sessionId: sessionId,
         };
 
-        const response = await axios.post(`${BASE_API}/text-generation/gpt/5-nano`, data, {
+        const response = await axios.post(`${akhfhid}/text-generation/gpt/5-nano`, data, {
             headers: { "Content-Type": "application/json" },
         });
 
@@ -26,13 +26,11 @@ async function checkToxic(text) {
     const systemPrompt = "You are a content moderation AI. Your task is to detect if the following message contains toxic, offensive, hate speech, or extremely rude content. Answer ONLY with 'YES' if it is toxic, or 'NO' if it is safe. Do not provide any explanation.";
     try {
         const response = await generateText(text, systemPrompt, "system-moderation");
-        // The API returns an object with 'result'
         const result = response.result.trim().toUpperCase();
-        // Check if it contains YES (sometimes AI might add punctuation)
         return result.includes("YES");
     } catch (error) {
         console.error("Moderation Check Error:", error);
-        return false; // Fail safe to avoid blocking legitimate messages on error
+        return false;
     }
 }
 

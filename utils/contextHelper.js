@@ -2,7 +2,6 @@ async function buildContext(client, message, args = []) {
     const text = args.length > 0 ? args.join(" ") : message.content.replace(new RegExp(`^<@!?${client.user.id}>`), "").trim();
     const targetUser = message.mentions.members.first();
 
-    // Fetch last 10 messages for context
     const fetchedMessages = await message.channel.messages.fetch({
         limit: 10,
     });
@@ -26,21 +25,21 @@ async function buildContext(client, message, args = []) {
             .map((role) => role.name);
 
         targetInfo = `
-Tentang user yang kamu sebut (${targetUser.user.username}):
-- Nama/Nickname: ${nickname}
-- Tanggal join: ${joinDate}
+About user you mention (${targetUser.user.username}):
+- Name/Nickname: ${nickname}
+- Join Date: ${joinDate}
 - Roles: ${roles.length ? roles.join(", ") : "Tidak punya role khusus"}
 `.trim();
     }
 
     const totalMembers = message.guild.memberCount;
     const voiceMembers = message.guild.channels.cache
-        .filter((c) => c.type === 2) // voice channels
+        .filter((c) => c.type === 2)
         .map((vc) => {
             const people = vc.members.map((m) => m.user.username);
             return people.length
                 ? `${vc.name}: ${people.join(", ")}`
-                : `${vc.name}: (kosong)`;
+                : `${vc.name}: (Nothing)`;
         })
         .join("\n");
 
