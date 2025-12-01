@@ -274,7 +274,8 @@ client.on("messageCreate", async (message) => {
   );
 
 
-  // AI Moderation
+  // AI Moderation (Disabled to fix latency)
+  /*
   if (message.content) {
     const isToxic = await checkToxic(message.content);
     if (isToxic) {
@@ -288,6 +289,7 @@ client.on("messageCreate", async (message) => {
       }
     }
   }
+  */
 
   // Smart Reply
   const prefix = process.env.PREFIX || "!";

@@ -1,7 +1,7 @@
 const axios = require("axios");
 require("dotenv").config();
 
-const akhfhid = process.env.akhfhid;
+const akhfhid = process.env.BASE_API || "https://api.nekolabs.web.id";
 
 async function generateText(text, systemPrompt, sessionId) {
     try {

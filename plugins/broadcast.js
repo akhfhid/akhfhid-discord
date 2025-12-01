@@ -3,7 +3,7 @@ const { EmbedBuilder } = require("discord.js");
 module.exports = {
     name: "broadcast",
     alias: ["bc"],
-    description: "Broadcast announcement about text-to-speech feature to all servers (Owner Only)",
+    description: "Broadcast announcement about latest features to all servers (Owner Only)",
     run: async (client, message, args) => {
         if (message.author.id !== "870115369174564914") {
             return message.reply("You do not have permission to use this command.");
@@ -11,37 +11,59 @@ module.exports = {
 
         const embed = new EmbedBuilder()
             .setColor("#00FFFF")
-            .setTitle("New Feature: AI Text-to-Speech (TTS)")
+            .setTitle(" New AI-Powered Features Available")
             .setDescription(
-                "**Now you can convert text into realistic AI-generated voices using the `!tts` command.**\n\n" +
-
-                "**How to Use:**\n" +
-                "1. Type: `!tts <your text>`\n" +
-                "2. Choose a voice from the dropdown menu\n" +
-                "3. Wait for audio generation to complete\n" +
-                "4. The bot will return your text as an audio file\n\n" +
-
-                "**Available Voices:**\n" +
-                "- Alloy — versatile and balanced\n" +
-                "- Echo — warm and rounded\n" +
-                "- Fable — British-accent, neutral tone\n" +
-                "- Onyx — deep and powerful voice\n" +
-                "- Nova — energetic and bright\n" +
-                "- Shimmer — expressive and clear\n\n" +
-
-                "**Example:**\n" +
-                "`!tts Hello everyone, welcome to the server!`\n\n" +
-
-                "**Now you can convert text into realistic AI-generated voices using `!tts`.**\n\n" +
-                "**Need help or want to request new features?**\n" +
-                "Contact <@870115369174564914> or use:\n" +
-                "`!req <your request>`\n\n" +
-                "Try it now and bring your messages to life with natural voice output."
+                "**Exciting updates! We've added powerful AI features to enhance your experience.**\n\n" +
+                "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n"
             )
-            .setFooter({ text: "<@870115369174564914> — owner of akhfhid-bot" })
+            .addFields(
+                {
+                    name: "AI Text-to-Speech",
+                    value:
+                        "Convert text into natural-sounding AI voices.\n" +
+                        "**Command:** `!tts <your text>`\n" +
+                        "**Voices:** Alloy, Echo, Fable, Onyx, Nova, Shimmer\n" +
+                        "**Example:** `!tts Welcome to our server!`",
+                    inline: false
+                },
+                {
+                    name: "AI Image Transformation",
+                    value:
+                        "Transform photos into artistic styles with AI.\n" +
+                        "**Command:** `!img2img <image_url>` or upload with `!img2img`\n" +
+                        "**Styles:** Photobox, Pixel Art, Anime, Cyberpunk, and more\n" +
+                        "**Feature:** Custom prompts supported",
+                    inline: false
+                },
+                {
+                    name: "YouTube Video Summarizer",
+                    value:
+                        "Get instant AI-generated summaries of YouTube videos.\n" +
+                        "**Command:** `!ytsummary <youtube_url>`\n" +
+                        "**Aliases:** `!ytsum`, `!yts`\n" +
+                        "**Example:** `!yts https://youtu.be/example`",
+                    inline: false
+                },
+                {
+                    name: "Feature Request",
+                    value:
+                        "Have ideas? Share your suggestions with us!\n" +
+                        "**Command:** `!req <your request>`\n" +
+                        "**Example:** `!req Add music playlist feature`",
+                    inline: false
+                }
+            )
+            .addFields({
+                name: "Need Help?",
+                value: "Contact <@870115369174564914> for assistance or questions.",
+                inline: false
+            })
+            .setFooter({ text: "akhfhid-bot • Powered by AI Technology" })
             .setTimestamp();
 
         let successCount = 0;
+        let successServers = [];
+        let failedServers = [];
         const guilds = client.guilds.cache.map(g => g);
 
         message.reply("Starting broadcast announcement...");
@@ -56,12 +78,43 @@ module.exports = {
                 try {
                     await channel.send({ embeds: [embed] });
                     successCount++;
+                    successServers.push(guild.name);
                 } catch (e) {
                     console.error(`Failed to send to server ${guild.name}:`, e);
+                    failedServers.push(guild.name);
                 }
+            } else {
+                failedServers.push(guild.name);
             }
         }
 
-        message.reply(`Announcement successfully sent to ${successCount} servers.`);
+        const resultEmbed = new EmbedBuilder()
+            .setColor(successCount > 0 ? "#00FF00" : "#FF0000")
+            .setTitle("Broadcast Report")
+            .setDescription(
+                `**Status:** ${successCount > 0 ? "Completed" : "Failed"}\n` +
+                `**Total Servers:** ${guilds.length}\n` +
+                `**Success:** ${successCount} servers\n` +
+                `**Failed:** ${failedServers.length} servers`
+            )
+            .addFields({
+                name: `Successful Broadcasts (${successCount})`,
+                value: successServers.length > 0
+                    ? successServers.map(name => `\`${name}\``).join(", ")
+                    : "None",
+                inline: false
+            })
+            .setFooter({ text: `Broadcast completed at` })
+            .setTimestamp();
+
+        if (failedServers.length > 0) {
+            resultEmbed.addFields({
+                name: `Failed Broadcasts (${failedServers.length})`,
+                value: failedServers.map(name => `\`${name}\``).join(", "),
+                inline: false
+            });
+        }
+
+        message.channel.send({ embeds: [resultEmbed] });
     }
 };
