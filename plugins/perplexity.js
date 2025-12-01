@@ -4,21 +4,21 @@ const akhfhid = process.env.BASE_API;
 module.exports = {
     name: "perplexity",
     alias: ["plex", "ai-plex"],
-    description: "Mencari informasi dengan Perplexity AI",
+    description: "Search information with Perplexity AI",
 
     run: async (client, message, args) => {
         const query = args.join(" ");
-        if (!query) return message.reply("Masukkan topik yang ingin diteliti!");
+        if (!query) return message.reply("Insert Topic !");
 
         let seconds = 0;
         const loadingEmbed = new EmbedBuilder()
             .setColor('#FFFF00')
             .setTitle('🧠 Perplexity AI')
-            .setDescription(`Sedang mencari informasi tentang:\n**${query}**`)
+            .setDescription(`Searching information about:\n**${query}**`)
             .setTimestamp()
             .addFields(
                 { name: '⏱️ Duration', value: `0 Sec`, inline: true },
-                { name: '📊 Status', value: `Menghubungi API...`, inline: true }
+                { name: '📊 Status', value: `Connecting to API...`, inline: true }
             )
             .setTimestamp()
             .setFooter({ text: `Requested by ${message.author.tag}` });
@@ -30,7 +30,7 @@ module.exports = {
             const updated = EmbedBuilder.from(loadingEmbed)
                 .setFields(
                     { name: '⏱️ Duration', value: `${seconds} Sec`, inline: true },
-                    { name: '📊 Status', value: `Memproses data...`, inline: true }
+                    { name: '📊 Status', value: `Processing data...`, inline: true }
                 )
                 .setTimestamp()
                 .setFooter({ text: `Requested by ${message.author.tag}` });
@@ -91,7 +91,8 @@ module.exports = {
                                 }[Open Link](${s.url})`;
                         }).join("\n\n")
                     )
-                    .setFooter({ text: 'Requested by ' + `${message.author.tag}` || 'User' });
+                    .setFooter({ text: 'Requested by ' + `${message.author.tag}` || 'User' })
+                    .setTimestamp();
             };
 
             const getButtons = () => {
