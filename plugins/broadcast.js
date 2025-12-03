@@ -2,64 +2,78 @@ const { EmbedBuilder } = require("discord.js");
 
 module.exports = {
     name: "broadcast",
-    alias: ["bc"],
-    description: "Broadcast announcement about latest features to all servers (Owner Only)",
+    alias: ["bc", "broadcast"],
+    description: "Broadcast announcement about new Anime system to all servers in English (Owner Only)",
     run: async (client, message, args) => {
         if (message.author.id !== "870115369174564914") {
             return message.reply("You do not have permission to use this command.");
         }
 
         const embed = new EmbedBuilder()
-            .setColor("#00FFFF")
-            .setTitle(" New AI-Powered Features Available")
+            .setColor("#00FF88")
+            .setTitle(" New Anime Search, Episode Navigation & Streaming System")
             .setDescription(
-                "**Exciting updates! We've added powerful AI features to enhance your experience.**\n\n" +
+                "**We’ve added a complete anime browsing system in this bot. Search anime, view full details, navigate episodes, and watch instantly!**\n\n" +
                 "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n"
             )
             .addFields(
                 {
-                    name: "AI Text-to-Speech",
+                    name: "Search Anime",
                     value:
-                        "Convert text into natural-sounding AI voices.\n" +
-                        "**Command:** `!tts <your text>`\n" +
-                        "**Voices:** Alloy, Echo, Fable, Onyx, Nova, Shimmer\n" +
-                        "**Example:** `!tts Welcome to our server!`",
+                        "Find anime instantly through the bot.\n" +
+                        "**Command:** `!anime <title>`\n" +
+                        "**Examples:** `!anime naruto`, `!anime one piece`, `!anime bleach`",
                     inline: false
                 },
                 {
-                    name: "AI Image Transformation",
+                    name: "Anime Details",
                     value:
-                        "Transform photos into artistic styles with AI.\n" +
-                        "**Command:** `!img2img <image_url>` or upload with `!img2img`\n" +
-                        "**Styles:** Photobox, Pixel Art, Anime, Cyberpunk, and more\n" +
-                        "**Feature:** Custom prompts supported",
+                        "View complete information:\n" +
+                        "• Synopsis\n" +
+                        "• Score rating\n" +
+                        "• Genres\n" +
+                        "• Airing status\n" +
+                        "• Total episodes\n" +
+                        "• Recommended similar anime (genre-based)",
                     inline: false
                 },
                 {
-                    name: "YouTube Video Summarizer",
+                    name: "Episode Navigation",
                     value:
-                        "Get instant AI-generated summaries of YouTube videos.\n" +
-                        "**Command:** `!ytsummary <youtube_url>`\n" +
-                        "**Aliases:** `!ytsum`, `!yts`\n" +
-                        "**Example:** `!yts https://youtu.be/example`",
+                        "If an anime has many episodes, they’re grouped into pages of 25 each.\n" +
+                        "**Page examples:**\n" +
+                        "• Episode 1–25\n" +
+                        "• Episode 26–50\n" +
+                        "• Episode 51–75\n" +
+                        "…and so on.",
                     inline: false
                 },
                 {
-                    name: "Feature Request",
+                    name: "Smart Back Navigation",
                     value:
-                        "Have ideas? Share your suggestions with us!\n" +
-                        "**Command:** `!req <your request>`\n" +
-                        "**Example:** `!req Add music playlist feature`",
+                        "Smooth user experience without confusion or errors:\n" +
+                        "• From Episode → Back to Episode List\n" +
+                        "• From Episode List → Back to Page Selection\n" +
+                        "• From Page Selection → Back to Anime Details\n" +
+                        "• From Anime Details → Back to Search Results",
+                    inline: false
+                },
+                {
+                    name: "Streaming & Download",
+                    value:
+                        "Each episode provides stream & download links when available.\n" +
+                        "Streaming opens directly via browser or media player.",
                     inline: false
                 }
             )
             .addFields({
                 name: "Need Help?",
-                value: "Contact <@870115369174564914> for assistance or questions.",
+                value: "If you have any questions or encounter issues: Contact <@870115369174564914>",
                 inline: false
             })
-            .setFooter({ text: "akhfhid-bot • Powered by AI Technology" })
+            .setFooter({ text: "akhfhid-bot • Powered by Akhfhid Nime" })
             .setTimestamp();
+
 
         let successCount = 0;
         let successServers = [];
