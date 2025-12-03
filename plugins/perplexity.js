@@ -87,7 +87,8 @@ module.exports = {
                     .setTitle(` Sources Journal (Page ${pageIndex + 1}/${totalPage})`)
                     .setDescription(
                         paginated.map((s, i) => {
-                            return `**${start + i + 1}. ${s.name}**\n${s.snippet ? `> ${s.snippet}\n` : ""
+                            const snippet = s.snippet ? (s.snippet.length > 200 ? s.snippet.substring(0, 200) + "..." : s.snippet) : "";
+                            return `**${start + i + 1}. ${s.name}**\n${snippet ? `> ${snippet}\n` : ""
                                 }[Open Link](${s.url})`;
                         }).join("\n\n")
                     )

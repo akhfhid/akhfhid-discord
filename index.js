@@ -649,6 +649,7 @@ client.on("interactionCreate", async (interaction) => {
     } else if (customId.includes("_")) {
       // Ignore perplexity buttons handled by collectors
       if (["prev_source", "next_source", "delete_source"].includes(customId)) return;
+      if (customId.startsWith("anime_") || customId.startsWith("episode_") || customId.startsWith("ep_page_") || customId.startsWith("back_to_search") || customId.startsWith("open_anime_") || customId.startsWith("manga_") || customId.startsWith("chapter_") || customId.startsWith("select_chapter_") || customId.startsWith("back_to_search_manga") || customId.startsWith("read_page_")) return;
 
       const [, type, messageId] = customId.split("_");
       const userData = stalkerData.get(messageId);
