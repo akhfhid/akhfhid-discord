@@ -15,7 +15,7 @@ module.exports = {
         let seconds = 0;
         const loadingEmbed = new EmbedBuilder()
             .setColor('#FFFF00')
-            .setTitle('🎬 YouTube Summarizer')
+            .setTitle('YouTube Summarizer')
             .setDescription(`Analyzing video content...\n**${url}**`)
             .setTimestamp()
             .addFields(
@@ -59,7 +59,7 @@ module.exports = {
 
             const summaryEmbed = new EmbedBuilder()
                 .setColor('#FF0000')
-                .setTitle(`📝 Video Summary`)
+                .setTitle(`Video Summary`)
                 .setDescription(result.content.substring(0, 4000)) // Discord limit check
                 .addFields(
                     { name: '⏱️ Process Time', value: `${seconds} Sec`, inline: true },
