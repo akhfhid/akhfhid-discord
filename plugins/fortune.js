@@ -1,4 +1,4 @@
-const { EmbedBuilder } = require('discord.js');
+const { EmbedBuilder, StringSelectMenuBuilder, ActionRowBuilder } = require('discord.js');
 const { generateText } = require('../utils/aiHelper');
 const fs = require('fs');
 const path = require('path');
@@ -6,13 +6,11 @@ const path = require('path');
 const tarotPath = path.join(__dirname, '../data/tarotCards.json');
 const fortuneHistoryPath = path.join(__dirname, '../data/fortuneHistory.json');
 
-// Load tarot cards
 let tarotData = {};
 if (fs.existsSync(tarotPath)) {
     tarotData = JSON.parse(fs.readFileSync(tarotPath, 'utf8'));
 }
 
-// Load fortune history
 let fortuneHistory = {};
 if (fs.existsSync(fortuneHistoryPath)) {
     fortuneHistory = JSON.parse(fs.readFileSync(fortuneHistoryPath, 'utf8'));
@@ -31,7 +29,7 @@ function checkCooldown(userId, category) {
     if (!lastTime) return true;
 
     const now = Date.now();
-    const cooldown = 24 * 60 * 60 * 1000; // 24 hours
+    const cooldown = 24 * 60 * 60 * 1000;
 
     return (now - lastTime) >= cooldown;
 }
@@ -66,114 +64,214 @@ function drawTarotCards(count = 3) {
     }));
 }
 
+async function performFortuneTelling(client, message, category, menuMsg = null) {
+    const categoryNames = {
+        love: 'Love & Relationship',
+        career: 'Career & Work',
+        health: 'Health',
+        money: 'Finance',
+        today: 'Today',
+        general: 'General'
+    };
+
+    let seconds = 0;
+    const loadingEmbed = new EmbedBuilder()
+        .setColor('#9B59B6')
+        .setTitle('🔮 Fortune Teller')
+        .setDescription(`Reading your fortune about:\n**${categoryNames[category]}**`)
+        .setTimestamp()
+        .addFields(
+            { name: '⏱️ Duration', value: `0 Sec`, inline: true },
+            { name: '📊 Status', value: `Connecting to mystical energy...`, inline: true }
+        )
+        .setFooter({ text: `Requested by ${message.author.tag}` });
+
+    const loadingMsg = menuMsg || await message.channel.send({ embeds: [loadingEmbed] });
+    if (menuMsg) {
+        await menuMsg.edit({ embeds: [loadingEmbed], components: [] });
+    }
+
+    const timer = setInterval(() => {
+        seconds++;
+        const updated = EmbedBuilder.from(loadingEmbed)
+            .setFields(
+                { name: '⏱️ Duration', value: `${seconds} Sec`, inline: true },
+                { name: '📊 Status', value: `Channeling cosmic wisdom...`, inline: true }
+            )
+            .setFooter({ text: `Requested by ${message.author.tag}` });
+        loadingMsg.edit({ embeds: [updated] }).catch(() => { });
+    }, 1000);
+
+    try {
+        const systemPrompt = `Kamu adalah peramal mistis yang bijaksana dan misterius bernama "Mystic Oracle". Berikan ramalan yang mystical, puitis, dan penuh makna. Gunakan bahasa Indonesia yang indah dan sedikit misterius. Jangan terlalu serius tapi juga jangan terlalu random. Maksimal 4-5 kalimat. Gunakan beberapa emoji mystical seperti ✨🌙⭐🔮 tapi jangan berlebihan.`;
+
+        const text = `Berikan ramalan untuk ${message.author.username} tentang ${categoryNames[category]}. Tanggal: ${new Date().toLocaleDateString('id-ID')}`;
+
+        const response = await generateText(text, systemPrompt, `fortune-${message.author.id}`);
+
+        clearInterval(timer);
+
+        if (response && response.result) {
+            setCooldown(message.author.id, category);
+
+            const fortuneEmbed = new EmbedBuilder()
+                .setColor('#9B59B6')
+                .setAuthor({
+                    name: '🔮 Mystic Oracle',
+                    iconURL: client.user.displayAvatarURL()
+                })
+                .setTitle(`Ramalan ${categoryNames[category]}`)
+                .setDescription(`*Untuk ${message.author.username}*\n\n${response.result}`)
+                .addFields(
+                    { name: '📅 Tanggal', value: new Date().toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }), inline: true },
+                    { name: '🎴 Kategori', value: categoryNames[category], inline: true },
+                    { name: '⏱️ Response Time', value: `${seconds} Sec`, inline: true }
+                )
+                .setFooter({ text: 'Ramalan ini berlaku untuk 24 jam ke depan' })
+                .setTimestamp();
+
+            await loadingMsg.edit({ embeds: [fortuneEmbed] });
+        } else {
+            throw new Error('No result from AI');
+        }
+    } catch (error) {
+        clearInterval(timer);
+        console.error('Fortune error:', error);
+
+        const errorEmbed = new EmbedBuilder()
+            .setColor('#E74C3C')
+            .setTitle('❌ Energi Mistis Terganggu')
+            .setDescription('Maaf, kristal bola sedang berawan. Coba lagi sebentar lagi.')
+            .setTimestamp();
+
+        await loadingMsg.edit({ embeds: [errorEmbed] });
+    }
+}
+
 module.exports = {
     name: "fortune",
-    description: "Dapatkan ramalan mistis dari AI 🔮",
+    description: "Get mystical fortune reading from AI 🔮",
     alias: ["ramalan", "nasib"],
 
     run: async (client, message, args) => {
-        const category = args[0]?.toLowerCase() || 'general';
+        const category = args[0]?.toLowerCase();
         const validCategories = ['love', 'career', 'health', 'money', 'today', 'general'];
 
-        if (!validCategories.includes(category)) {
-            const embed = new EmbedBuilder()
-                .setColor('#9B59B6')
-                .setTitle('🔮 Fortune Teller')
-                .setDescription(`Kategori tidak valid! Pilih salah satu:\n\n${validCategories.map(c => `\`${c}\``).join(', ')}`)
-                .addFields({
-                    name: '📖 Cara Pakai',
-                    value: '`!fortune [kategori]`\nContoh: `!fortune love`'
-                })
-                .setFooter({ text: 'Atau gunakan !tarot untuk tarot reading' });
+        if (category && validCategories.includes(category)) {
+            if (!checkCooldown(message.author.id, category)) {
+                const lastTime = fortuneHistory[message.author.id][category];
+                const timeLeft = 24 * 60 * 60 * 1000 - (Date.now() - lastTime);
+                const hoursLeft = Math.floor(timeLeft / (60 * 60 * 1000));
+                const minutesLeft = Math.floor((timeLeft % (60 * 60 * 1000)) / (60 * 1000));
 
-            return message.reply({ embeds: [embed] });
+                const embed = new EmbedBuilder()
+                    .setColor('#E74C3C')
+                    .setTitle('⏰ Cooldown Active')
+                    .setDescription(`You already received a **${category}** fortune today!\n\nTry again in: **${hoursLeft}h ${minutesLeft}m**`)
+                    .setFooter({ text: 'Fortune available once per 24 hours per category' });
+
+                return message.reply({ embeds: [embed] });
+            }
+
+            return await performFortuneTelling(client, message, category);
         }
 
-        // Check cooldown
-        if (!checkCooldown(message.author.id, category)) {
-            const lastTime = fortuneHistory[message.author.id][category];
-            const timeLeft = 24 * 60 * 60 * 1000 - (Date.now() - lastTime);
-            const hoursLeft = Math.floor(timeLeft / (60 * 60 * 1000));
-            const minutesLeft = Math.floor((timeLeft % (60 * 60 * 1000)) / (60 * 1000));
+        const selectMenu = new StringSelectMenuBuilder()
+            .setCustomId(`fortune_select_${message.author.id}`)
+            .setPlaceholder('Choose a fortune category...')
+            .addOptions([
+                {
+                    label: 'Love & Relationship',
+                    description: 'Fortune about your love life',
+                    value: 'love',
+                    // emoji: '💕'
+                },
+                {
+                    label: 'Career & Work',
+                    description: 'Fortune about your career',
+                    value: 'career',
+                    // emoji: '💼'
+                },
+                {
+                    label: 'Health',
+                    description: 'Fortune about your health',
+                    value: 'health',
+                    // emoji: '🏥'
+                },
+                {
+                    label: 'Finance',
+                    description: 'Fortune about your money',
+                    value: 'money',
+                    // emoji: '💰'
+                },
+                {
+                    label: 'Today',
+                    description: 'Fortune for today',
+                    value: 'today',
+                    // emoji: '📅'
+                },
+                {
+                    label: 'General',
+                    description: 'General fortune reading',
+                    value: 'general',
+                    // emoji: '✨'
+                }
+            ]);
 
-            const embed = new EmbedBuilder()
-                .setColor('#E74C3C')
-                .setTitle('⏰ Cooldown Active')
-                .setDescription(`Kamu sudah mendapat ramalan **${category}** hari ini!\n\nCoba lagi dalam: **${hoursLeft}h ${minutesLeft}m**`)
-                .setFooter({ text: 'Ramalan tersedia 1x per 24 jam per kategori' });
+        const row = new ActionRowBuilder().addComponents(selectMenu);
 
-            return message.reply({ embeds: [embed] });
-        }
-
-        // Loading message
-        const loadingEmbed = new EmbedBuilder()
+        const menuEmbed = new EmbedBuilder()
             .setColor('#9B59B6')
-            .setTitle('🔮 Memanggil Energi Mistis...')
-            .setDescription('*Kristal bola bersinar... Kartu tarot bergetar...*')
+            .setTitle('🔮 Fortune Teller')
+            .setDescription('Select a category to receive your mystical fortune reading.\n\n**Available Categories:**\n - Love & Relationship\n - Career & Work\n - Health\n - Finance\n - Today\n - General')
+            .setFooter({ text: 'Select from the menu below' })
             .setTimestamp();
 
-        const loadingMsg = await message.reply({ embeds: [loadingEmbed] });
+        const menuMsg = await message.reply({ embeds: [menuEmbed], components: [row] });
 
-        try {
-            const categoryNames = {
-                love: 'Cinta & Hubungan',
-                career: 'Karir & Pekerjaan',
-                health: 'Kesehatan',
-                money: 'Keuangan',
-                today: 'Hari Ini',
-                general: 'Umum'
-            };
+        const collector = menuMsg.createMessageComponentCollector({
+            filter: (i) => i.customId === `fortune_select_${message.author.id}` && i.user.id === message.author.id,
+            time: 60000
+        });
 
-            const systemPrompt = `Kamu adalah peramal mistis yang bijaksana dan misterius bernama "Mystic Oracle". Berikan ramalan yang mystical, puitis, dan penuh makna. Gunakan bahasa Indonesia yang indah dan sedikit misterius. Jangan terlalu serius tapi juga jangan terlalu random. Maksimal 4-5 kalimat. Gunakan beberapa emoji mystical seperti ✨🌙⭐🔮 tapi jangan berlebihan.`;
+        collector.on('collect', async (interaction) => {
+            const selectedCategory = interaction.values[0];
 
-            const text = `Berikan ramalan untuk ${message.author.username} tentang ${categoryNames[category]}. Tanggal: ${new Date().toLocaleDateString('id-ID')}`;
+            if (!checkCooldown(message.author.id, selectedCategory)) {
+                const lastTime = fortuneHistory[message.author.id][selectedCategory];
+                const timeLeft = 24 * 60 * 60 * 1000 - (Date.now() - lastTime);
+                const hoursLeft = Math.floor(timeLeft / (60 * 60 * 1000));
+                const minutesLeft = Math.floor((timeLeft % (60 * 60 * 1000)) / (60 * 1000));
 
-            const response = await generateText(text, systemPrompt, `fortune-${message.author.id}`);
-
-            if (response && response.result) {
-                // Set cooldown
-                setCooldown(message.author.id, category);
-
-                const fortuneEmbed = new EmbedBuilder()
-                    .setColor('#9B59B6')
-                    .setAuthor({
-                        name: '🔮 Mystic Oracle',
-                        iconURL: client.user.displayAvatarURL()
-                    })
-                    .setTitle(`Ramalan ${categoryNames[category]}`)
-                    .setDescription(`*Untuk ${message.author.username}*\n\n${response.result}`)
-                    .addFields(
-                        { name: '📅 Tanggal', value: new Date().toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }), inline: true },
-                        { name: '🎴 Kategori', value: categoryNames[category], inline: true }
-                    )
-                    .setFooter({ text: 'Ramalan ini berlaku untuk 24 jam ke depan' })
-                    .setTimestamp();
-
-                await loadingMsg.edit({ embeds: [fortuneEmbed] });
-            } else {
-                throw new Error('No result from AI');
+                await interaction.update({
+                    embeds: [new EmbedBuilder()
+                        .setColor('#E74C3C')
+                        .setTitle('⏰ Cooldown Active')
+                        .setDescription(`Kamu sudah mendapat ramalan **${selectedCategory}** hari ini!\n\nCoba lagi dalam: **${hoursLeft}h ${minutesLeft}m**`)
+                        .setFooter({ text: 'Ramalan tersedia 1x per 24 jam per kategori' })],
+                    components: []
+                });
+                return;
             }
-        } catch (error) {
-            console.error('Fortune error:', error);
 
-            const errorEmbed = new EmbedBuilder()
-                .setColor('#E74C3C')
-                .setTitle('❌ Energi Mistis Terganggu')
-                .setDescription('Maaf, kristal bola sedang berawan. Coba lagi sebentar lagi.')
-                .setTimestamp();
+            await interaction.deferUpdate();
+            await performFortuneTelling(client, message, selectedCategory, menuMsg);
+            collector.stop();
+        });
 
-            await loadingMsg.edit({ embeds: [errorEmbed] });
-        }
+        collector.on('end', (collected, reason) => {
+            if (reason === 'time') {
+                menuMsg.edit({ components: [] }).catch(() => { });
+            }
+        });
     },
 
-    // Tarot reading command
     tarot: {
         name: "tarot",
-        description: "Dapatkan tarot card reading 🎴",
+        description: "Get tarot card reading 🎴",
         alias: ["kartu", "cards"],
 
         run: async (client, message, args) => {
-            // Check cooldown
             if (!checkCooldown(message.author.id, 'tarot')) {
                 const lastTime = fortuneHistory[message.author.id]['tarot'];
                 const timeLeft = 24 * 60 * 60 * 1000 - (Date.now() - lastTime);
@@ -183,46 +281,60 @@ module.exports = {
                 const embed = new EmbedBuilder()
                     .setColor('#E74C3C')
                     .setTitle('⏰ Cooldown Active')
-                    .setDescription(`Kamu sudah mendapat tarot reading hari ini!\n\nCoba lagi dalam: **${hoursLeft}h ${minutesLeft}m**`)
-                    .setFooter({ text: 'Tarot reading tersedia 1x per 24 jam' });
+                    .setDescription(`You already received a tarot reading today!\n\nTry again in: **${hoursLeft}h ${minutesLeft}m**`)
+                    .setFooter({ text: 'Tarot reading available once per 24 hours' });
 
                 return message.reply({ embeds: [embed] });
             }
 
-            // Loading
+            let seconds = 0;
             const loadingEmbed = new EmbedBuilder()
                 .setColor('#9B59B6')
-                .setTitle('🎴 Mengocok Kartu Tarot...')
-                .setDescription('*Kartu-kartu tarot berputar dalam energi mistis...*')
-                .setTimestamp();
+                .setTitle('🎴 Tarot Reading')
+                .setDescription('Shuffling the mystical tarot cards...')
+                .setTimestamp()
+                .addFields(
+                    { name: '⏱️ Duration', value: `0 Sec`, inline: true },
+                    { name: '📊 Status', value: `Drawing cards...`, inline: true }
+                )
+                .setFooter({ text: `Requested by ${message.author.tag}` });
 
             const loadingMsg = await message.reply({ embeds: [loadingEmbed] });
 
-            try {
-                // Draw 3 cards
-                const cards = drawTarotCards(3);
-                const positions = ['Past (Masa Lalu)', 'Present (Saat Ini)', 'Future (Masa Depan)'];
+            const timer = setInterval(() => {
+                seconds++;
+                const updated = EmbedBuilder.from(loadingEmbed)
+                    .setFields(
+                        { name: '⏱️ Duration', value: `${seconds} Sec`, inline: true },
+                        { name: '📊 Status', value: `Interpreting the cards...`, inline: true }
+                    )
+                    .setFooter({ text: `Requested by ${message.author.tag}` });
+                loadingMsg.edit({ embeds: [updated] }).catch(() => { });
+            }, 1000);
 
-                // Build card description
+            try {
+                const cards = drawTarotCards(3);
+                const positions = ['Past', 'Present', 'Future'];
+
                 const cardDescriptions = cards.map((card, index) => {
                     const meaning = card.reversed ? card.reversed : card.upright;
                     const orientation = card.reversed ? '(Reversed)' : '(Upright)';
                     return `**${positions[index]}**\n🎴 ${card.name} ${orientation}\n*${meaning}*`;
                 }).join('\n\n');
 
-                // Build context for AI
                 const cardContext = cards.map((card, index) => {
                     return `${positions[index]}: ${card.name} ${card.reversed ? '(Reversed)' : '(Upright)'} - ${card.reversed ? card.reversed : card.upright}`;
                 }).join(', ');
 
-                const systemPrompt = `Kamu adalah master tarot reader yang bijaksana dan mystical. Berikan interpretasi tarot reading yang mendalam, puitis, dan penuh makna. Gunakan bahasa Indonesia yang indah. Hubungkan ketiga kartu (Past, Present, Future) menjadi satu cerita yang koheren. Maksimal 5-6 kalimat. Gunakan emoji mystical secukupnya.`;
+                const systemPrompt = `You are a master tarot reader who is wise and mystical. Provide deep, poetic, and meaningful tarot interpretations. Use beautiful English. Connect the three cards (Past, Present, Future) into one coherent story. Maximum 5-6 sentences. Use mystical emojis sparingly.`;
 
-                const text = `Berikan interpretasi tarot reading untuk ${message.author.username}. Kartu yang ditarik: ${cardContext}`;
+                const text = `Provide a tarot reading interpretation for ${message.author.username}. Cards drawn: ${cardContext}`;
 
                 const response = await generateText(text, systemPrompt, `tarot-${message.author.id}`);
 
+                clearInterval(timer);
+
                 if (response && response.result) {
-                    // Set cooldown
                     setCooldown(message.author.id, 'tarot');
 
                     const tarotEmbed = new EmbedBuilder()
@@ -231,13 +343,20 @@ module.exports = {
                             name: '🎴 Tarot Reading',
                             iconURL: client.user.displayAvatarURL()
                         })
-                        .setTitle(`Reading untuk ${message.author.username}`)
+                        .setTitle(`Reading for ${message.author.username}`)
                         .setDescription(cardDescriptions)
-                        .addFields({
-                            name: '🔮 Interpretasi Mystical',
-                            value: response.result
-                        })
-                        .setFooter({ text: 'Renungkan pesan dari kartu-kartu ini' })
+                        .addFields(
+                            {
+                                name: '🔮 Mystical Interpretation',
+                                value: response.result
+                            },
+                            {
+                                name: '⏱️ Response Time',
+                                value: `${seconds} Sec`,
+                                inline: true
+                            }
+                        )
+                        .setFooter({ text: 'Reflect on the message from these cards' })
                         .setTimestamp();
 
                     await loadingMsg.edit({ embeds: [tarotEmbed] });
@@ -245,12 +364,13 @@ module.exports = {
                     throw new Error('No result from AI');
                 }
             } catch (error) {
+                clearInterval(timer);
                 console.error('Tarot error:', error);
 
                 const errorEmbed = new EmbedBuilder()
                     .setColor('#E74C3C')
-                    .setTitle('❌ Kartu Tarot Terganggu')
-                    .setDescription('Energi mistis sedang tidak stabil. Coba lagi sebentar.')
+                    .setTitle('❌ Tarot Cards Disrupted')
+                    .setDescription('The mystical energy is unstable. Please try again later.')
                     .setTimestamp();
 
                 await loadingMsg.edit({ embeds: [errorEmbed] });
