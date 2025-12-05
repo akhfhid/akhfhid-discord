@@ -13,15 +13,13 @@ const { checkToxic, generateText } = require("./utils/aiHelper");
 const { buildContext } = require("./utils/contextHelper");
 const { YtDlpPlugin } = require("@distube/yt-dlp");
 const ffmpeg = require("ffmpeg-static");
-
 const { DisTube } = require("distube");
-
 const fs = require("fs");
 const cron = require("node-cron");
 let commandCounter = 0;
 const path = require("path");
 const commandUsage = new Map();
-const stalkerData = new Map(); // Define stalkerData globally
+const stalkerData = new Map();
 const handler = require("./handler");
 const levelDataPath = path.join(__dirname, "data/levels.json");
 const express = require("express");
@@ -837,6 +835,25 @@ let scheduleConfig = {};
 if (fs.existsSync(configPath)) {
   scheduleConfig = JSON.parse(fs.readFileSync(configPath, "utf8"));
 }
+async function generateDailyMessage(guildName, dayName, dateStr) {
+  try {
+    const systemPrompt = `Kamu adalah asisten AI yang ramah dan memotivasi. Buatkan pesan pagi yang singkat, positif, dan memotivasi dalam bahasa Indonesia. Maksimal 3-4 kalimat saja. Jangan gunakan emoji berlebihan.`;
+
+    const text = `Buatkan pesan motivasi pagi untuk server Discord "${guildName}" di hari ${dayName}, ${dateStr}.`;
+
+    const response = await generateText(text, systemPrompt, "schedule-daily-message");
+
+    if (response && response.result) {
+      return response.result;
+    }
+
+    return null;
+  } catch (error) {
+    console.error('❌ Error generating daily message:', error);
+    return null;
+  }
+}
+
 async function sendScheduledMessage() {
   console.log(`[${new Date().toLocaleString()}] Mengecek jadwal harian...`);
 
@@ -863,12 +880,17 @@ async function sendScheduledMessage() {
     const dateStr = now.toLocaleDateString("id-ID");
     const timeStr = now.toLocaleTimeString("id-ID");
 
-    const messageTemplate = `🌅 **Pesan Pagi Harian**\nSelamat pagi warga ${guild.name}! ☀️\nHari ${dayName}, ${dateStr} pukul ${timeStr}.\n\nSemoga hari ini penuh berkah dan produktif. Jangan lupa bahagia dan tetap semangat! 🎉`;
+    console.log(`Generating AI message for ${guild.name}...`);
+    const gptMessage = await generateDailyMessage(guild.name, dayName, dateStr);
+
+    const messageTemplate = gptMessage
+      ? `🌅 **Pesan Pagi Harian**\nSelamat pagi warga ${guild.name}! ☀️\nHari ${dayName}, ${dateStr}\n\n${gptMessage}\n\n_Dikirim otomatis setiap pukul 07:30 WIB_`
+      : `🌅 **Pesan Pagi Harian**\nSelamat pagi warga ${guild.name}! ☀️\nHari ${dayName}, ${dateStr} pukul ${timeStr}.\n\nSemoga hari ini penuh berkah dan produktif. Jangan lupa bahagia dan tetap semangat! 🎉`;
 
     try {
       await channel.send(messageTemplate);
       console.log(
-        `✅ Pesan jadwal terkirim ke server: ${guild.name} (${guildId})`
+        `✅ Pesan jadwal terkirim ke server: ${guild.name} (${guildId}) ${gptMessage ? '(AI-generated)' : '(Fallback)'}`
       );
     } catch (error) {
       console.error(`❌ Gagal mengirim pesan ke server ${guild.name}:`, error);

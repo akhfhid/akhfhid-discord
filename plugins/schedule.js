@@ -51,7 +51,7 @@ module.exports = {
                     { name: 'Channel', value: channel ? channel.toString() : 'Tidak diatur', inline: true },
                     { name: 'Waktu', value: '07:30 Pagi', inline: true }
                 )
-                .setFooter({ text: 'Gunakan !setschedule #channel untuk mengatur channel' })
+                .setFooter({ text: 'Pesan akan bervariasi setiap hari menggunakan AI' })
                 .setTimestamp();
 
             return message.channel.send({ embeds: [embed] });
@@ -103,7 +103,7 @@ module.exports = {
                     { name: 'Channel', value: channel ? channel.toString() : 'Tidak diatur', inline: true },
                     { name: 'Waktu', value: '07:30 Pagi', inline: true }
                 )
-                .setFooter({ text: 'Pesan akan dikirim setiap hari pukul 07:30' })
+                .setFooter({ text: 'Pesan akan bervariasi setiap hari menggunakan AI' })
                 .setTimestamp();
 
             return message.channel.send({ embeds: [embed] });
