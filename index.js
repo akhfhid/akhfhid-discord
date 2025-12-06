@@ -644,8 +644,27 @@ client.on("interactionCreate", async (interaction) => {
           ephemeral: true,
         });
       }
+    } else if (customId.startsWith("confession_submit_")) {
+      const { ModalBuilder, TextInputBuilder, TextInputStyle } = require("discord.js");
+
+      const modal = new ModalBuilder()
+        .setCustomId(`confession_modal_${customId}`)
+        .setTitle("Submit Anonymous Confession");
+
+      const confessionInput = new TextInputBuilder()
+        .setCustomId("confession_text")
+        .setLabel("Your Confession")
+        .setStyle(TextInputStyle.Paragraph)
+        .setPlaceholder("Share your thoughts anonymously...")
+        .setRequired(true)
+        .setMinLength(10)
+        .setMaxLength(1000);
+
+      const firstActionRow = new ActionRowBuilder().addComponents(confessionInput);
+      modal.addComponents(firstActionRow);
+
+      await interaction.showModal(modal);
     } else if (customId.includes("_")) {
-      // Ignore perplexity buttons handled by collectors
       if (["prev_source", "next_source", "delete_source"].includes(customId)) return;
       if (customId.startsWith("anime_") || customId.startsWith("episode_") || customId.startsWith("ep_page_") || customId.startsWith("back_to_search") || customId.startsWith("open_anime_") || customId.startsWith("manga_") || customId.startsWith("chapter_") || customId.startsWith("select_chapter_") || customId.startsWith("back_to_search_manga") || customId.startsWith("read_page_")) return;
 
@@ -825,6 +844,47 @@ client.on("interactionCreate", async (interaction) => {
         await interaction.reply({
           content: "Terjadi kesalahan saat menampilkan detail!",
           ephemeral: true,
+        });
+      }
+    }
+  } else if (interaction.isModalSubmit()) {
+    if (interaction.customId.startsWith("confession_modal_")) {
+      const originalCustomId = interaction.customId.replace("confession_modal_", "");
+      const parts = originalCustomId.split("_");
+      const channelId = parts[2];
+      const confessionNumber = parts[3];
+
+      const confessionText = interaction.fields.getTextInputValue("confession_text");
+      const channel = interaction.guild.channels.cache.get(channelId);
+
+      if (!channel) {
+        return await interaction.reply({
+          content: "❌ Channel not found!",
+          ephemeral: true
+        });
+      }
+
+      const confessionEmbed = new EmbedBuilder()
+        .setColor("#E91E63")
+        .setTitle(`Anonymous Confession`)
+        .setDescription(confessionText)
+        .setFooter({ text: `Confession Box #${confessionNumber} • ${interaction.guild.name}` })
+        .setTimestamp();
+
+      try {
+        // Send confession to channel
+        await channel.send({ embeds: [confessionEmbed] });
+
+        // Confirm to user
+        // await interaction.reply({
+        //   content: "✅ Your confession has been submitted anonymously!",
+        //   ephemeral: true
+        // });
+      } catch (error) {
+        console.error("Error posting confession:", error);
+        await interaction.reply({
+          content: "❌ Failed to post confession. Please try again.",
+          ephemeral: true
         });
       }
     }

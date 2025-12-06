@@ -3,75 +3,86 @@ const { EmbedBuilder } = require("discord.js");
 module.exports = {
     name: "broadcast",
     alias: ["bc", "broadcast"],
-    description: "Broadcast announcement about new Anime system to all servers in English (Owner Only)",
+    description: "Broadcast announcement about new features to all servers (Owner Only)",
     run: async (client, message, args) => {
         if (message.author.id !== "870115369174564914") {
             return message.reply("You do not have permission to use this command.");
         }
 
         const embed = new EmbedBuilder()
-            .setColor("#00FF88")
-            .setTitle(" New Anime Search, Episode Navigation & Streaming System")
+            .setColor("#9B59B6")
+            .setTitle("New AI Features: Fortune Teller & Vibe Check")
             .setDescription(
-                "**We’ve added a complete anime browsing system in this bot. Search anime, view full details, navigate episodes, and watch instantly!**\n\n" +
+                "**We've added two exciting AI-powered features to enhance your server experience!**\n\n" +
                 "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n"
             )
             .addFields(
                 {
-                    name: "Search Anime",
+                    name: "Fortune Teller - Mystical AI Readings",
                     value:
-                        "Find anime instantly through the bot.\n" +
-                        "**Command:** `!anime <title>`\n" +
-                        "**Examples:** `!anime naruto`, `!anime one piece`, `!anime bleach`",
+                        "Get personalized fortune readings powered by AI.\n" +
+                        "**Command:** `!fortune`\n" +
+                        "**Features:**\n" +
+                        "• Interactive category selection menu\n" +
+                        "• 6 categories: Love, Career, Health, Finance, Today, General\n" +
+                        "• Mystical and poetic fortune readings in Indonesian\n" +
+                        "• 24-hour cooldown per category\n" +
+                        "• Real-time loading with response timer",
+                    inline: false
+                },
+                // {
+                //     name: "Tarot Card Reading",
+                //     value:
+                //         "Receive mystical tarot interpretations.\n" +
+                //         "**Command:** `!tarot`\n" +
+                //         "**Features:**\n" +
+                //         "• 78 complete tarot cards (Major & Minor Arcana)\n" +
+                //         "• 3-card spread: Past, Present, Future\n" +
+                //         "• AI-powered mystical interpretations\n" +
+                //         "• Available once per 24 hours",
+                //     inline: false
+                // },
+                {
+                    name: "Vibe Check - Personality Analysis",
+                    value:
+                        "Analyze personality and vibes with AI.\n" +
+                        "**Commands:**\n" +
+                        "• `!vibecheck` - Check your own vibe\n" +
+                        "• `!vibecheck @user` - Check someone else's vibe\n" +
+                        "• `!vibecheck #channel` - Check channel vibe\n" +
+                        "**Features:**\n" +
+                        "• Witty and entertaining AI analysis\n" +
+                        "• Vibe score (0-100) with color coding\n" +
+                        "• Analyzes recent chat messages\n" +
+                        "• No cooldown - use anytime!",
                     inline: false
                 },
                 {
-                    name: "Anime Details",
+                    name: "Vibe Score System",
                     value:
-                        "View complete information:\n" +
-                        "• Synopsis\n" +
-                        "• Score rating\n" +
-                        "• Genres\n" +
-                        "• Airing status\n" +
-                        "• Total episodes\n" +
-                        "• Recommended similar anime (genre-based)",
-                    inline: false
-                },
-                {
-                    name: "Episode Navigation",
-                    value:
-                        "If an anime has many episodes, they’re grouped into pages of 25 each.\n" +
-                        "**Page examples:**\n" +
-                        "• Episode 1–25\n" +
-                        "• Episode 26–50\n" +
-                        "• Episode 51–75\n" +
-                        "…and so on.",
-                    inline: false
-                },
-                {
-                    name: "Smart Back Navigation",
-                    value:
-                        "Smooth user experience without confusion or errors:\n" +
-                        "• From Episode → Back to Episode List\n" +
-                        "• From Episode List → Back to Page Selection\n" +
-                        "• From Page Selection → Back to Anime Details\n" +
-                        "• From Anime Details → Back to Search Results",
-                    inline: false
-                },
-                {
-                    name: "Streaming & Download",
-                    value:
-                        "Each episode provides stream & download links when available.\n" +
-                        "Streaming opens directly via browser or media player.",
+                        "• **80-100:** Vibes Positif (Green)\n" +
+                        "• **60-79:** Vibes Santai (Blue)\n" +
+                        "• **40-59:** Vibes Campur (Yellow)\n" +
+                        "• **20-39:** Vibes Kacau (Orange)\n" +
+                        "• **0-19:** Vibes Toxic (Red)",
                     inline: false
                 }
             )
+            .addFields({
+                name: "Try It Now!",
+                value:
+                    "Start exploring these mystical features:\n" +
+                    "• Type `!fortune` for your daily fortune\n" +
+                    "• Type `!tarot` for tarot card reading\n" +
+                    "• Type `!vibecheck` to check your vibe",
+                inline: false
+            })
             .addFields({
                 name: "Need Help?",
                 value: "If you have any questions or encounter issues: Contact <@870115369174564914>",
                 inline: false
             })
-            .setFooter({ text: "akhfhid-bot • Powered by Akhfhid Nime" })
+            .setFooter({ text: "akhfhid-bot • Powered by AI" })
             .setTimestamp();
 
 
