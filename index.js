@@ -664,6 +664,53 @@ client.on("interactionCreate", async (interaction) => {
       modal.addComponents(firstActionRow);
 
       await interaction.showModal(modal);
+    } else if (customId.startsWith("confession_reply_")) {
+      // Handle confession reply button click
+      const { ModalBuilder, TextInputBuilder, TextInputStyle } = require("discord.js");
+
+      // Extract info from customId: confession_reply_CHANNELID_BOXNUMBER_CONFESSIONID
+      const parts = customId.split("_");
+      const channelId = parts[2];
+      const boxNumber = parts[3];
+      const confessionId = parts[4];
+
+      // Get confession message URL
+      const fs = require("fs");
+      const path = require("path");
+      const confessionDataPath = path.join(__dirname, "data/confessions.json");
+
+      let confessionUrl = "";
+      if (fs.existsSync(confessionDataPath)) {
+        const confessionData = JSON.parse(fs.readFileSync(confessionDataPath, "utf8"));
+        const guildId = interaction.guild.id;
+
+        if (confessionData[guildId]?.confessions[boxNumber]) {
+          const confession = confessionData[guildId].confessions[boxNumber].confessionMessages.find(
+            c => c.id == confessionId
+          );
+          if (confession) {
+            confessionUrl = confession.messageUrl;
+          }
+        }
+      }
+
+      const modal = new ModalBuilder()
+        .setCustomId(`confession_reply_modal_${channelId}_${boxNumber}_${confessionId}`)
+        .setTitle(`Reply to Confession #${confessionId}`);
+
+      const replyInput = new TextInputBuilder()
+        .setCustomId("reply_text")
+        .setLabel(`Reply to Confession #${confessionId} (Box #${boxNumber})`)
+        .setStyle(TextInputStyle.Paragraph)
+        .setPlaceholder("Type your reply here...")
+        .setRequired(true)
+        .setMinLength(1)
+        .setMaxLength(1000);
+
+      const firstActionRow = new ActionRowBuilder().addComponents(replyInput);
+      modal.addComponents(firstActionRow);
+
+      await interaction.showModal(modal);
     } else if (customId.includes("_")) {
       if (["prev_source", "next_source", "delete_source"].includes(customId)) return;
       if (customId.startsWith("anime_") || customId.startsWith("episode_") || customId.startsWith("ep_page_") || customId.startsWith("back_to_search") || customId.startsWith("open_anime_") || customId.startsWith("manga_") || customId.startsWith("chapter_") || customId.startsWith("select_chapter_") || customId.startsWith("back_to_search_manga") || customId.startsWith("read_page_")) return;
@@ -852,7 +899,7 @@ client.on("interactionCreate", async (interaction) => {
       const originalCustomId = interaction.customId.replace("confession_modal_", "");
       const parts = originalCustomId.split("_");
       const channelId = parts[2];
-      const confessionNumber = parts[3];
+      const confessionBoxNumber = parts[3];
 
       const confessionText = interaction.fields.getTextInputValue("confession_text");
       const channel = interaction.guild.channels.cache.get(channelId);
@@ -864,26 +911,215 @@ client.on("interactionCreate", async (interaction) => {
         });
       }
 
+      // Defer the reply to prevent timeout, then delete it to keep it silent
+      await interaction.deferReply({ ephemeral: true });
+
+      // Load confession data to get and increment confession counter
+      const fs = require("fs");
+      const path = require("path");
+      const confessionDataPath = path.join(__dirname, "data/confessions.json");
+
+      let confessionData = {};
+      if (fs.existsSync(confessionDataPath)) {
+        confessionData = JSON.parse(fs.readFileSync(confessionDataPath, "utf8"));
+      }
+
+      const guildId = interaction.guild.id;
+      if (!confessionData[guildId]) {
+        confessionData[guildId] = { counter: 0, boxCounter: 0, confessions: {} };
+      }
+      if (!confessionData[guildId].confessions) {
+        confessionData[guildId].confessions = {};
+      }
+
+      // Increment confession counter (different from box counter)
+      if (!confessionData[guildId].confessionCounter) {
+        confessionData[guildId].confessionCounter = 0;
+      }
+      confessionData[guildId].confessionCounter++;
+      const confessionId = confessionData[guildId].confessionCounter;
+
       const confessionEmbed = new EmbedBuilder()
         .setColor("#E91E63")
-        .setTitle(`Anonymous Confession`)
+        .setTitle(`Anonymous Confession #${confessionId}`)
         .setDescription(confessionText)
-        .setFooter({ text: `Confession Box #${confessionNumber} • ${interaction.guild.name}` })
+        .setFooter({ text: `Confession Box #${confessionId} • ${interaction.guild.name}` })
         .setTimestamp();
 
-      try {
-        // Send confession to channel
-        await channel.send({ embeds: [confessionEmbed] });
+      // Add reply button
+      const replyButton = new ButtonBuilder()
+        .setCustomId(`confession_reply_${channelId}_${confessionBoxNumber}_${confessionId}`)
+        .setLabel("Reply")
+        .setStyle(ButtonStyle.Secondary)
+        .setEmoji("💬");
 
-        // Confirm to user
-        // await interaction.reply({
-        //   content: "✅ Your confession has been submitted anonymously!",
-        //   ephemeral: true
-        // });
+      const row = new ActionRowBuilder().addComponents(replyButton);
+
+      try {
+        const confessionMsg = await channel.send({
+          embeds: [confessionEmbed],
+          components: [row]
+        });
+
+        // Save confession message ID
+        if (!confessionData[guildId].confessions[confessionBoxNumber]) {
+          confessionData[guildId].confessions[confessionBoxNumber] = {
+            boxMessageId: null,
+            confessionMessages: []
+          };
+        }
+        confessionData[guildId].confessions[confessionBoxNumber].confessionMessages.push({
+          id: confessionId,
+          messageId: confessionMsg.id,
+          messageUrl: confessionMsg.url
+        });
+
+        // Delete ALL old confession boxes to ensure only one exists
+        try {
+          const messages = await channel.messages.fetch({ limit: 100 });
+          const confessionBoxes = messages.filter(msg =>
+            msg.embeds.length > 0 &&
+            msg.embeds[0].title &&
+            msg.embeds[0].title.startsWith("AnonymousConfess(#")
+          );
+
+          // Delete all confession boxes
+          for (const [, boxMsg] of confessionBoxes) {
+            try {
+              await boxMsg.delete();
+            } catch (e) {
+              console.log("Could not delete confession box:", e.message);
+            }
+          }
+        } catch (error) {
+          console.error("Error deleting old confession boxes:", error);
+        }
+
+        // Repost confession box to bottom
+        const boxEmbed = new EmbedBuilder()
+          .setColor("#9B59B6")
+          .setTitle(`AnonymousConfess(#${confessionId + 1})`)
+          .setDescription(
+            "📝 **Anonymous Confession Box**\n\n" +
+            "Share your thoughts, feelings, or secrets anonymously.\n\n" +
+            "Click the button below to submit your confession.\n\n" +
+            "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n" +
+            "✨ Your identity will remain completely anonymous\n" +
+            "💬 Be respectful and kind\n" +
+            "🔒 Your confession will be posted in this channel"
+          )
+          .setFooter({ text: `Confession Box #${confessionId + 1} • ${interaction.guild.name}` })
+          .setTimestamp();
+
+        const submitButton = new ButtonBuilder()
+          .setCustomId(`confession_submit_${channelId}_${confessionBoxNumber}`)
+          .setLabel("Submit a Confession")
+          .setStyle(ButtonStyle.Primary)
+          .setEmoji("📝");
+
+        const boxRow = new ActionRowBuilder().addComponents(submitButton);
+
+        const newBoxMsg = await channel.send({
+          embeds: [boxEmbed],
+          components: [boxRow]
+        });
+
+        // Save new box message ID
+        confessionData[guildId].confessions[confessionBoxNumber].boxMessageId = newBoxMsg.id;
+
+        // Save updated data
+        fs.writeFileSync(confessionDataPath, JSON.stringify(confessionData, null, 2), "utf8");
+
+        // Delete the deferred reply to keep it silent
+        await interaction.deleteReply();
+
       } catch (error) {
         console.error("Error posting confession:", error);
         await interaction.reply({
           content: "❌ Failed to post confession. Please try again.",
+          ephemeral: true
+        });
+      }
+    } else if (interaction.customId.startsWith("confession_reply_modal_")) {
+      // Handle confession reply modal submission
+      const originalCustomId = interaction.customId.replace("confession_reply_modal_", "");
+      const parts = originalCustomId.split("_");
+      const channelId = parts[0];
+      const boxNumber = parts[1];
+      const confessionId = parts[2];
+
+      const replyText = interaction.fields.getTextInputValue("reply_text");
+      const channel = interaction.guild.channels.cache.get(channelId);
+
+      if (!channel) {
+        return await interaction.reply({
+          content: "❌ Channel not found!",
+          ephemeral: true
+        });
+      }
+
+      // Defer the reply to prevent timeout
+      await interaction.deferReply({ ephemeral: true });
+
+      // Get confession message ID
+      const fs = require("fs");
+      const path = require("path");
+      const confessionDataPath = path.join(__dirname, "data/confessions.json");
+
+      let confessionMessageId = null;
+      if (fs.existsSync(confessionDataPath)) {
+        const confessionData = JSON.parse(fs.readFileSync(confessionDataPath, "utf8"));
+        const guildId = interaction.guild.id;
+
+        if (confessionData[guildId]?.confessions[boxNumber]) {
+          const confession = confessionData[guildId].confessions[boxNumber].confessionMessages.find(
+            c => c.id == confessionId
+          );
+          if (confession) {
+            confessionMessageId = confession.messageId;
+          }
+        }
+      }
+
+      if (!confessionMessageId) {
+        return await interaction.reply({
+          content: "❌ Original confession not found!",
+          ephemeral: true
+        });
+      }
+
+      try {
+        // Fetch the original confession message
+        const confessionMessage = await channel.messages.fetch(confessionMessageId);
+
+        // Check if thread already exists for this confession
+        let thread = confessionMessage.thread;
+
+        if (!thread) {
+          // Create a new thread if it doesn't exist
+          thread = await confessionMessage.startThread({
+            name: `Anonymous Confession #${confessionId}`,
+            autoArchiveDuration: 10080, // 7 days (maximum for non-boosted servers)
+            reason: 'Anonymous confession discussion thread'
+          });
+        }
+
+        // Post reply in the thread
+        const replyEmbed = new EmbedBuilder()
+          .setColor("#3498DB")
+          .setTitle(`💬 Anonymous Reply`)
+          .setDescription(replyText)
+          .setFooter({ text: `Confession #${confessionId} • ${interaction.guild.name}` })
+          .setTimestamp();
+
+        await thread.send({ embeds: [replyEmbed] });
+
+        // Delete the deferred reply to keep it silent
+        await interaction.deleteReply();
+      } catch (error) {
+        console.error("Error posting reply:", error);
+        await interaction.reply({
+          content: "❌ Failed to post reply. Please try again.",
           ephemeral: true
         });
       }

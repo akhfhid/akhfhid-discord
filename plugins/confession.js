@@ -1,28 +1,4 @@
 const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, PermissionFlagsBits } = require("discord.js");
-const fs = require("fs");
-const path = require("path");
-
-const confessionDataPath = path.join(__dirname, "../data/confessions.json");
-
-function loadConfessionData() {
-    if (fs.existsSync(confessionDataPath)) {
-        try {
-            return JSON.parse(fs.readFileSync(confessionDataPath, "utf8"));
-        } catch (e) {
-            console.error("Failed to load confession data:", e);
-            return {};
-        }
-    }
-    return {};
-}
-
-function saveConfessionData(data) {
-    try {
-        fs.writeFileSync(confessionDataPath, JSON.stringify(data, null, 2), "utf8");
-    } catch (e) {
-        console.error("Failed to save confession data:", e);
-    }
-}
 
 module.exports = {
     name: "confessh",
@@ -42,31 +18,33 @@ module.exports = {
         if (mentionedChannel.type !== 0) {
             return message.reply("Please mention a valid text channel!");
         }
-        const confessionData = loadConfessionData();
-        const guildId = message.guild.id;
 
-        if (!confessionData[guildId]) {
-            confessionData[guildId] = { counter: 0 };
+        let confessionNumber = 1;
+        try {
+            const messages = await mentionedChannel.messages.fetch({ limit: 100 });
+            const confessionMessages = messages.filter(msg =>
+                msg.embeds.length > 0 &&
+                msg.embeds[0].title &&
+                msg.embeds[0].title.startsWith("AnonymousConfess(#")
+            );
+            confessionNumber = confessionMessages.size + 1;
+        } catch (error) {
+            console.error("Error fetching messages:", error);
         }
-        confessionData[guildId].counter++;
-        const confessionNumber = confessionData[guildId].counter;
-
-        saveConfessionData(confessionData);
 
         const embed = new EmbedBuilder()
             .setColor("#9B59B6")
             .setTitle(`AnonymousConfess(#${confessionNumber})`)
             .setDescription(
                 "📝 **Anonymous Confession Box**\n\n" +
-                "Share your thoughts, feelings, or secrets anonymously.\n" +
+                "Share your thoughts, feelings, or secrets anonymously.\n\n" +
                 "Click the button below to submit your confession.\n\n" +
                 "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n" +
-                "✨ Your identity will remain completely anonymous\n" +
-                "💬 Be respectful and kind\n" +
+                "✨ Your identity will remain completely anonymous.\n\n" +
+                "💬 Be respectful and kind.\n\n" +
                 "🔒 Your confession will be posted in this channel"
             )
-            .setFooter({ text: `Confession Box #${confessionNumber} • ${message.guild.name}` })
-            .setTimestamp();
+            .setFooter({ text: `Confession Box #${confessionNumber} • ${message.guild.name}` });
 
         const button = new ButtonBuilder()
             .setCustomId(`confession_submit_${mentionedChannel.id}_${confessionNumber}`)
