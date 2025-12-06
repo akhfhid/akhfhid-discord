@@ -11,78 +11,67 @@ module.exports = {
 
         const embed = new EmbedBuilder()
             .setColor("#9B59B6")
-            .setTitle("New AI Features: Fortune Teller & Vibe Check")
+            .setTitle("🎭 New Feature: Anonymous Confession System")
             .setDescription(
-                "**We've added two exciting AI-powered features to enhance your server experience!**\n\n" +
+                "**Share your thoughts anonymously with our new confession system!**\n\n" +
                 "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n"
             )
             .addFields(
                 {
-                    name: "Fortune Teller - Mystical AI Readings",
+                    name: "📝 Anonymous Confession Box",
                     value:
-                        "Get personalized fortune readings powered by AI.\n" +
-                        "**Command:** `!fortune`\n" +
+                        "Create a safe space for anonymous confessions in your server.\n" +
+                        "**Admin Command:** `!confes #channel`\n" +
                         "**Features:**\n" +
-                        "• Interactive category selection menu\n" +
-                        "• 6 categories: Love, Career, Health, Finance, Today, General\n" +
-                        "• Mystical and poetic fortune readings in Indonesian\n" +
-                        "• 24-hour cooldown per category\n" +
-                        "• Real-time loading with response timer",
-                    inline: false
-                },
-                // {
-                //     name: "Tarot Card Reading",
-                //     value:
-                //         "Receive mystical tarot interpretations.\n" +
-                //         "**Command:** `!tarot`\n" +
-                //         "**Features:**\n" +
-                //         "• 78 complete tarot cards (Major & Minor Arcana)\n" +
-                //         "• 3-card spread: Past, Present, Future\n" +
-                //         "• AI-powered mystical interpretations\n" +
-                //         "• Available once per 24 hours",
-                //     inline: false
-                // },
-                {
-                    name: "Vibe Check - Personality Analysis",
-                    value:
-                        "Analyze personality and vibes with AI.\n" +
-                        "**Commands:**\n" +
-                        "• `!vibecheck` - Check your own vibe\n" +
-                        "• `!vibecheck @user` - Check someone else's vibe\n" +
-                        "• `!vibecheck #channel` - Check channel vibe\n" +
-                        "**Features:**\n" +
-                        "• Witty and entertaining AI analysis\n" +
-                        "• Vibe score (0-100) with color coding\n" +
-                        "• Analyzes recent chat messages\n" +
-                        "• No cooldown - use anytime!",
+                        "• Completely anonymous submissions\n" +
+                        "• Auto-numbered confessions\n" +
+                        "• Thread-based discussions\n" +
+                        "• Reply button for each confession\n" +
+                        "• Dynamic confession box (always at bottom)\n" +
+                        "• Silent submission (no notifications)",
                     inline: false
                 },
                 {
-                    name: "Vibe Score System",
+                    name: "🔒 How It Works",
                     value:
-                        "• **80-100:** Vibes Positif (Green)\n" +
-                        "• **60-79:** Vibes Santai (Blue)\n" +
-                        "• **40-59:** Vibes Campur (Yellow)\n" +
-                        "• **20-39:** Vibes Kacau (Orange)\n" +
-                        "• **0-19:** Vibes Toxic (Red)",
+                        "**For Admins:**\n" +
+                        "1. Use `!confes #channel` to create a confession box\n" +
+                        "2. The box will appear with a submit button\n" +
+                        "3. Each confession gets auto-numbered\n\n" +
+                        "**For Users:**\n" +
+                        "1. Click 'Submit a Confession' button\n" +
+                        "2. Fill in your confession (10-1000 characters)\n" +
+                        "3. Submit anonymously - no one knows it's you!\n" +
+                        "4. Click 'Reply' to respond in the thread",
+                    inline: false
+                },
+                {
+                    name: "✨ Key Features",
+                    value:
+                        "• **100% Anonymous** - Your identity is never revealed\n" +
+                        "• **Thread Discussions** - Each confession gets its own thread\n" +
+                        "• **Auto-Numbering** - Confessions numbered sequentially\n" +
+                        "• **Clean Interface** - No spam, no clutter\n" +
+                        "• **Always Updated** - Confession box stays at bottom\n" +
+                        "• **Silent Mode** - No 'only you can see this' messages",
                     inline: false
                 }
             )
             .addFields({
-                name: "Try It Now!",
+                name: "🚀 Get Started!",
                 value:
-                    "Start exploring these mystical features:\n" +
-                    "• Type `!fortune` for your daily fortune\n" +
-                    "• Type `!tarot` for tarot card reading\n" +
-                    "• Type `!vibecheck` to check your vibe",
+                    "Admins can set up the confession box now:\n" +
+                    "• Type `!confes #your-channel` to create a confession box\n" +
+                    "• Users can then submit anonymous confessions\n" +
+                    "• Everyone can reply anonymously in threads",
                 inline: false
             })
             .addFields({
-                name: "Need Help?",
+                name: "💡 Need Help?",
                 value: "If you have any questions or encounter issues: Contact <@870115369174564914>",
                 inline: false
             })
-            .setFooter({ text: "akhfhid-bot • Powered by AI" })
+            .setFooter({ text: "akhfhid-bot • Your Privacy Matters" })
             .setTimestamp();
 
 
