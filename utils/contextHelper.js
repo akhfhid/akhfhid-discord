@@ -34,12 +34,12 @@ About user you mention (${targetUser.user.username}):
 
     const totalMembers = message.guild.memberCount;
     const voiceMembers = message.guild.channels.cache
-        .filter((c) => c.type === 2)
+        .filter((c) => c.isVoiceBased())
         .map((vc) => {
             const people = vc.members.map((m) => m.user.username);
             return people.length
-                ? `${vc.name}: ${people.join(", ")}`
-                : `${vc.name}: (Nothing)`;
+                ? `- ${vc.name}: ${people.join(", ")}`
+                : `- ${vc.name}: (Kosong)`;
         })
         .join("\n");
 
@@ -62,6 +62,10 @@ ${voiceMembers}
 ${allMembers}
 
 Gunakan informasi ini secara natural, seolah kamu benar-benar tinggal bersama mereka di server ini.
+
+PENTING: Jika pengguna meminta informasi kontak publik (seperti nomor HP kost, bisnis, toko, atau layanan umum), KAMU DIIZINKAN dan HARUS memberikannya jika ada dalam hasil pencarian atau pengetahuanmu.
+- Jangan menolak dengan alasan privasi untuk data bisnis/publik.
+- Jika diminta mencarikan kost/tempat usaha, sertakan nomor kontak yang bisa dihubungi agar membantu pengguna.
 
 Jika pengguna memberi perintah sosial seperti:
 - "tanyain si @mention"
