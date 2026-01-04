@@ -3,7 +3,7 @@
     "counter": 3,
     "confessions": {
       "1": {
-        "boxMessageId": "1455102840518479893",
+        "boxMessageId": "1455457504162091193",
         "confessionMessages": [
           {
             "id": 27,
@@ -64,6 +64,11 @@
             "id": 38,
             "messageId": "1455102836122718291",
             "messageUrl": "https://discord.com/channels/1412474885225054394/1446897666641498303/1455102836122718291"
+          },
+          {
+            "id": 39,
+            "messageId": "1455457499200094320",
+            "messageUrl": "https://discord.com/channels/1412474885225054394/1446897666641498303/1455457499200094320"
           }
         ]
       },
@@ -228,7 +233,7 @@
         ]
       }
     },
-    "confessionCounter": 38
+    "confessionCounter": 39
   },
   "1442081027408400416": {
     "counter": 0,

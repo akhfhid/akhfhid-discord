@@ -11,64 +11,17 @@ module.exports = {
 
         const embed = new EmbedBuilder()
             .setColor("#9B59B6")
-            .setTitle("🎭 New Feature: Anonymous Confession System")
+            .setTitle("Informasi Streaming Anime & Drama China")
             .setDescription(
-                "**Share your thoughts anonymously with our new confession system!**\n\n" +
-                "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n"
+                "Kami informasikan bahwa layanan streaming baru kini telah tersedia untuk diakses.\n\n" +
+                "Anda dapat menikmati koleksi Drama China melalui tautan:\n" +
+                "https://dracin.akhfhid.my.id\n\n" +
+                "Serta layanan streaming Anime melalui tautan:\n" +
+                "https://anime.akhfhid.my.id"
             )
-            .addFields(
-                {
-                    name: "📝 Anonymous Confession Box",
-                    value:
-                        "Create a safe space for anonymous confessions in your server.\n" +
-                        "**Admin Command:** `!confes #channel`\n" +
-                        "**Features:**\n" +
-                        "• Completely anonymous submissions\n" +
-                        "• Auto-numbered confessions\n" +
-                        "• Thread-based discussions\n" +
-                        "• Reply button for each confession\n" +
-                        "• Dynamic confession box (always at bottom)\n" +
-                        "• Silent submission (no notifications)",
-                    inline: false
-                },
-                {
-                    name: "🔒 How It Works",
-                    value:
-                        "**For Admins:**\n" +
-                        "1. Use `!confes #channel` to create a confession box\n" +
-                        "2. The box will appear with a submit button\n" +
-                        "3. Each confession gets auto-numbered\n\n" +
-                        "**For Users:**\n" +
-                        "1. Click 'Submit a Confession' button\n" +
-                        "2. Fill in your confession (10-1000 characters)\n" +
-                        "3. Submit anonymously - no one knows it's you!\n" +
-                        "4. Click 'Reply' to respond in the thread",
-                    inline: false
-                },
-                {
-                    name: "✨ Key Features",
-                    value:
-                        "• **100% Anonymous** - Your identity is never revealed\n" +
-                        "• **Thread Discussions** - Each confession gets its own thread\n" +
-                        "• **Auto-Numbering** - Confessions numbered sequentially\n" +
-                        "• **Clean Interface** - No spam, no clutter\n" +
-                        "• **Always Updated** - Confession box stays at bottom\n" +
-                        "• **Silent Mode** - No 'only you can see this' messages",
-                    inline: false
-                }
-            )
-            .addFields({
-                name: "🚀 Get Started!",
-                value:
-                    "Admins can set up the confession box now:\n" +
-                    "• Type `!confes #your-channel` to create a confession box\n" +
-                    "• Users can then submit anonymous confessions\n" +
-                    "• Everyone can reply anonymously in threads",
-                inline: false
-            })
             .addFields({
                 name: "💡 Need Help?",
-                value: "If you have any questions or encounter issues: Contact <@870115369174564914>",
+                value: "If you have any questions or encounter issues: Contact Owner: <@870115369174564914>",
                 inline: false
             })
             .setFooter({ text: "akhfhid-bot • Your Privacy Matters" })
