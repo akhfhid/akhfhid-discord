@@ -1,23 +1,26 @@
-const axios = require("axios");
+const claude = require("./claude");
 require("dotenv").config();
-
-const akhfhid = process.env.BASE_API || "https://api.nekolabs.web.id";
 
 async function generateText(text, systemPrompt, sessionId) {
     try {
-        const data = {
-            text: text,
-            systemPrompt: systemPrompt,
-            sessionId: sessionId,
+        const startedAt = Date.now();
+        const prompt = systemPrompt && systemPrompt.trim()
+            ? `System Instruction:\n${systemPrompt.trim()}\n\nUser Input:\n${text}`
+            : text;
+
+        const response = await claude(prompt);
+        const responseTime = `${((Date.now() - startedAt) / 1000).toFixed(1)}s`;
+
+        return {
+            result: response.result || "",
+            responseTime,
+            provider: "claude.ai",
+            sessionId,
+            conversationId: response.conversationId || null,
+            model: response.model || null,
         };
-
-        const response = await axios.post(`${akhfhid}/text-generation/gpt/5-nano`, data, {
-            headers: { "Content-Type": "application/json" },
-        });
-
-        return response.data;
     } catch (error) {
-        console.error("AI API Error:", error);
+        console.error("AI API Error (Claude):", error?.message || error);
         throw error;
     }
 }

@@ -14,19 +14,33 @@ const akhfhid = process.env.BASE_API;
 
 process.env.FFMPEG_PATH = ffmpegPath;
 
+function formatDuration(duration) {
+    if (duration == null) return 'Unknown';
+    if (typeof duration === 'string') return duration;
+    if (typeof duration === 'number' && Number.isFinite(duration)) {
+        const totalSeconds = Math.max(0, Math.floor(duration));
+        const hours = Math.floor(totalSeconds / 3600);
+        const minutes = Math.floor((totalSeconds % 3600) / 60);
+        const seconds = totalSeconds % 60;
+        if (hours > 0) return `${hours}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+        return `${minutes}:${String(seconds).padStart(2, '0')}`;
+    }
+    return String(duration);
+}
+
 function createSongEmbed(metadata, type = 'play') {
     const embed = new EmbedBuilder()
         .setColor(type === 'play' ? '#0099ff' : '#ff3366')
         .setTitle(type === 'play' ? 'Song Added to Queue' : 'Now Playing')
         .setDescription(`**${metadata.title}**`)
         .addFields(
-            { name: 'Channel', value: metadata.channel, inline: true },
-            { name: 'Duration', value: metadata.duration, inline: true }
+            { name: 'Channel', value: String(metadata.channel ?? 'Unknown'), inline: true },
+            { name: 'Duration', value: formatDuration(metadata.duration), inline: true }
         )
-        .setImage(metadata.cover)
         .setTimestamp()
         .setFooter({ text: 'Requested by ' + (metadata.requestedBy || 'User') });
 
+    if (metadata.cover) embed.setImage(String(metadata.cover));
     return embed;
 }
 

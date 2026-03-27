@@ -3,7 +3,7 @@ const { EmbedBuilder } = require('discord.js');
 module.exports = {
     name: "help",
     description: "Displays a list of all available commands",
-    alias: ["h", "commands"],
+    alias: ["h", "commands", "menu", "menulist"],
     run: async (client, message, args) => {
         const sortedCommands = Array.from(client.commands.values())
             .sort((a, b) => a.name.localeCompare(b.name));

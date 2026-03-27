@@ -1,11 +1,47 @@
-const axios = require("axios");
-const akhfhid = process.env.BASE_API;
+const nanobanana = require("../utils/nanobanana");
 const {
     EmbedBuilder,
     ActionRowBuilder,
     StringSelectMenuBuilder,
-    AttachmentBuilder,
 } = require("discord.js");
+
+function extractImageUrl(value) {
+    if (!value) return null;
+    if (typeof value === "string") {
+        return /^https?:\/\//i.test(value) ? value : null;
+    }
+    if (Array.isArray(value)) {
+        for (const item of value) {
+            const found = extractImageUrl(item);
+            if (found) return found;
+        }
+        return null;
+    }
+    if (typeof value === "object") {
+        const priorityKeys = [
+            "url",
+            "image",
+            "imageUrl",
+            "output",
+            "result",
+            "resultUrl",
+            "outputUrl",
+            "generatedImage",
+            "generatedImages",
+        ];
+        for (const key of priorityKeys) {
+            if (Object.prototype.hasOwnProperty.call(value, key)) {
+                const found = extractImageUrl(value[key]);
+                if (found) return found;
+            }
+        }
+        for (const nested of Object.values(value)) {
+            const found = extractImageUrl(nested);
+            if (found) return found;
+        }
+    }
+    return null;
+}
 
 const templates = [
     {
@@ -255,19 +291,16 @@ module.exports = {
             }, 1000);
 
             try {
-                const apiUrl = `${akhfhid}/image-generation/nano-banana/v1`;
-                const params = {
-                    prompt: prompt,
-                    imageUrl: imageUrl,
-                };
-
-                const response = await axios.get(apiUrl, { params });
+                const response = await nanobanana({
+                    imagePath: imageUrl,
+                    prompt,
+                });
 
                 clearInterval(timer);
 
-                if (response.data && response.data.success && response.data.result) {
-                    const resultUrl = response.data.result;
-                    const timeTaken = response.data.responseTime || "N/A";
+                const resultUrl = extractImageUrl(response);
+                if (resultUrl) {
+                    const timeTaken = `${seconds} Sec`;
 
                     const resultEmbed = new EmbedBuilder()
                         .setColor("#00FF00")
@@ -285,7 +318,7 @@ module.exports = {
                         embeds: [resultEmbed],
                     });
                 } else {
-                    throw new Error("API returned unsuccessful response");
+                    throw new Error("Nanobanana response did not include a result image URL");
                 }
             } catch (error) {
                 clearInterval(timer);
