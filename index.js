@@ -22,9 +22,6 @@ const commandUsage = new Map();
 const stalkerData = new Map();
 const handler = require("./handler");
 const levelDataPath = path.join(__dirname, "data/levels.json");
-const express = require("express");
-const app = express();
-const port = 9995;
 const dataDir = path.join(__dirname, "data");
 if (!fs.existsSync(dataDir)) {
   fs.mkdirSync(dataDir);
@@ -91,36 +88,6 @@ for (const [guildId, channelId] of Object.entries(welcomeChannels)) {
   client.welcomeChannels.set(guildId, channelId);
 }
 
-let cachedStats = {
-  // Data Bot
-  serverCount: 0,
-  userCount: 0,
-  uptime: 0,
-  commandsRun: 0,
-  botStatus: "Connecting",
-  ping: 0,
-
-  // Data Server (Statis, cukup diisi sekali)
-  nodeVersion: process.version,
-  discordJsVersion: require("discord.js").version,
-  discordJsVersion: require("discord.js").version,
-  discordJsVersion: require("discord.js").version,
-  platform: os.platform(),
-  popularCommand: "None",
-};
-
-app.get("/", (req, res) => {
-  res.render("index");
-});
-
-app.get("/privacy-policy", (req, res) => {
-  res.render("privacy");
-});
-
-app.get("/term-of-service", (req, res) => {
-  res.render("terms");
-});
-
 // --- Recent Activity Tracking ---
 const recentActivities = [];
 const MAX_ACTIVITIES = 10;
@@ -142,54 +109,6 @@ function addActivity(description, type = "info") {
   }
 }
 
-const botStartTime = Date.now();
-async function fetchStats() {
-  console.log('Mengupdate data statistik dashboard...');
-  try {
-    // --- Data Bot (Dinamis) ---
-    cachedStats.serverCount = client.guilds.cache.size;
-
-    let totalMembers = 0;
-    client.guilds.cache.forEach(guild => {
-      totalMembers += guild.memberCount;
-    });
-    cachedStats.userCount = totalMembers;
-
-    cachedStats.uptime = Date.now() - botStartTime;
-    cachedStats.ping = client.ws.ping;
-    cachedStats.botStatus = client.ws.status === 0 ? 'Online' : 'Offline';
-
-    // --- Data Server (Dinamis) ---
-    const loadAvg = os.loadavg()[0];
-    cachedStats.cpuLoad = `${(loadAvg * 100).toFixed(1)}%`;
-
-    const totalMem = os.totalmem();
-    const freeMem = os.freemem();
-    const usedMem = totalMem - freeMem;
-    const memUsagePercent = (usedMem / totalMem) * 100;
-    cachedStats.memoryUsage = `${memUsagePercent.toFixed(1)}% (${(usedMem / 1024 / 1024 / 1024).toFixed(2)} GB)`;
-
-    // --- Data Aktivitas (Dinamis) ---
-    cachedStats.commandsRun = commandCounter; // Ambil nilai dari penghitung
-    cachedStats.serverUptime = os.uptime();
-
-    // --- Popular Command Calculation ---
-    let maxUsage = 0;
-    let popularCmd = "None";
-    for (const [cmd, usage] of commandUsage.entries()) {
-      if (usage > maxUsage) {
-        maxUsage = usage;
-        popularCmd = cmd;
-      }
-    }
-    cachedStats.popularCommand = popularCmd !== "None" ? `${popularCmd} ` : "None";
-
-
-    console.log('Statistik dashboard berhasil diupdate!');
-  } catch (error) {
-    console.error('Gagal mengupdate statistik dashboard:', error);
-  }
-}
 client.on("clientReady", async () => {
   console.log(`Bot online sebagai ${client.user.tag}`);
   console.log(`Bot di ${client.guilds.cache.size} server`);
@@ -198,8 +117,7 @@ client.on("clientReady", async () => {
   );
   await client.loadSlash();
   console.log("Slash commands berhasil dipush!");
-  fetchStats();
-  setInterval(fetchStats, 5 * 60 * 1000);
+  console.log("Slash commands berhasil dipush!");
 });
 
 client.on("guildMemberAdd", (member) => {
@@ -307,7 +225,6 @@ client.on("messageCreate", async (message) => {
   addActivity(`User ${maskUsername(message.author.username)} run command `, "command");
 
   commandCounter++;
-  cachedStats.commandsRun = commandCounter;
 
   if (!message.content.startsWith(prefix)) return;
 
@@ -323,7 +240,7 @@ client.on("messageCreate", async (message) => {
     await command.run(client, message, args);
 
     commandCounter++;
-    cachedStats.commandsRun = commandCounter;
+    commandCounter++;
 
     const currentUsage = commandUsage.get(command.name) || 0;
     commandUsage.set(command.name, currentUsage + 1);
@@ -336,8 +253,6 @@ client.on("messageCreate", async (message) => {
         popularCmd = c;
       }
     }
-    cachedStats.popularCommand = popularCmd !== "None" ? `${popularCmd} ` : "None";
-
   } catch (e) {
     console.error(e);
     message.reply("Terjadi kesalahan saat menjalankan command!");
@@ -1199,26 +1114,4 @@ const scheduledJob = cron.schedule("0 30 7 * * *", sendScheduledMessage, {
   timezone: "Asia/Jakarta",
 });
 
-scheduledJob.start();
-console.log(" Cron job untuk pesan harian (07:30) telah diaktifkan");
-app.set("view engine", "ejs");
-app.set("views", path.join(__dirname, "views"));
-app.use(express.static("public"));
-
-app.get("/", (req, res) => {
-  res.render("index");
-});
-
-app.get("/api/stats", (req, res) => {
-  res.json(cachedStats);
-});
-
-app.get("/api/activity", (req, res) => {
-  res.json(recentActivities);
-});
-
-
-app.listen(port, () => {
-  console.log(`Dashboard server berjalan di http://localhost:${port}`);
-});
 client.login(process.env.TOKEN);
