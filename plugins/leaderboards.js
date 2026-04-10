@@ -1,6 +1,7 @@
 const { EmbedBuilder } = require("discord.js");
 const fs = require('fs');
 const path = require('path');
+const { getMessageCount } = require("../utils/messageCounter");
 
 const levelDataPath = path.join(__dirname, '../data/levels.json');
 
@@ -21,8 +22,8 @@ module.exports = {
         if (!levelData[guildId] || Object.keys(levelData[guildId]).length === 0) {
             const noDataEmbed = new EmbedBuilder()
                 .setColor('#FF5733')
-                .setTitle('❌ Belum Ada Data')
-                .setDescription('Tidak ada pengguna di server ini yang memiliki data level. Mulai ngobrol untuk mendapatkan XP!');
+                .setTitle('Belum Ada Data')
+                .setDescription('Belum ada data level di server ini. Mulai ngobrol untuk mendapatkan XP.');
             return message.reply({ embeds: [noDataEmbed] });
         }
 
@@ -31,23 +32,47 @@ module.exports = {
             .slice(0, 10);
 
         let description = '';
-        const medals = ['🥇', '🥈', '🥉'];
 
         for (let i = 0; i < sortedUsers.length; i++) {
             const [userId, data] = sortedUsers[i];
             const user = await client.users.fetch(userId).catch(() => null);
             if (!user) continue;
 
-            const medal = medals[i] || '🏅';
-            description += `${medal} **${user.username}** - Level **${data.level}** (${data.xp} XP)\n`;
+            const rank = String(i + 1).padStart(2, '0');
+            const safeName = user.username.replace(/\s+/g, " ").trim();
+            const msgCount = getMessageCount(guildId, userId);
+            description += `${rank}  ${safeName}  ${data.level}  ${data.xp}  ${msgCount}\n`;
         }
+
+        const NAME_COL_WIDTH = 22;
+        const XP_COL_WIDTH = 5;
+        const MSG_COL_WIDTH = 6;
+
+        const header = `RK  ${"USERNAME".padEnd(NAME_COL_WIDTH, " ")}  LV  ${"XP".padStart(XP_COL_WIDTH, " ")}  ${"MSG".padStart(MSG_COL_WIDTH, " ")}`;
+        const separator = "-".repeat(header.length);
+        const rows = description
+            .trim()
+            .split("\n")
+            .map((line) => {
+                const [rk, name, lv, xp, msg] = line.split("  ");
+                const nameCol = (name || "").slice(0, NAME_COL_WIDTH).padEnd(NAME_COL_WIDTH, " ");
+                const lvCol = String(lv || "").padStart(2, " ");
+                const xpCol = String(xp || "").padStart(XP_COL_WIDTH, " ");
+                const msgCol = String(msg || "").padStart(MSG_COL_WIDTH, " ");
+                return `${rk}  ${nameCol}  ${lvCol}  ${xpCol}  ${msgCol}`;
+            })
+            .join("\n");
+
+        const body =
+            `Ranking ${message.guild.name} — Top 10 pengguna\n\n` +
+            `\`\`\`\n${header}\n${separator}\n${rows}\n\`\`\``;
 
         const leaderboardEmbed = new EmbedBuilder()
             .setColor('#FFD700')
-            .setTitle(`Leaderboard ${message.guild.name}`)
-            .setDescription(description)
+            .setTitle(`Leaderboard — ${message.guild.name}`)
+            .setDescription(body)
             .setThumbnail(message.guild.iconURL({ dynamic: true }))
-            .setFooter({ text: `Leaderboard ${message.guild.name}` })
+            .setFooter({ text: `Top 10 berdasarkan Level dan XP` })
             .setTimestamp();
 
         message.reply({ embeds: [leaderboardEmbed] });

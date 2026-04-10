@@ -10,6 +10,7 @@ const {
   StringSelectMenuBuilder,
 } = require("discord.js");
 const { checkToxic, generateText } = require("./utils/aiHelper");
+const { incrementMessageCount } = require("./utils/messageCounter");
 const { buildContext } = require("./utils/contextHelper");
 const { YtDlpPlugin } = require("@distube/yt-dlp");
 const ffmpeg = require("ffmpeg-static");
@@ -29,6 +30,41 @@ const dataDir = path.join(__dirname, "data");
 if (!fs.existsSync(dataDir)) {
   fs.mkdirSync(dataDir);
 }
+
+function getErrorMessage(err) {
+  if (!err) return "Unknown error";
+  if (typeof err === "string") return err;
+  return err.message || String(err);
+}
+
+function isTransientNetworkError(err) {
+  const message = getErrorMessage(err);
+  const code = err && err.code ? String(err.code) : "";
+  return (
+    code === "DEPTH_ZERO_SELF_SIGNED_CERT" ||
+    code === "ECONNRESET" ||
+    code === "ETIMEDOUT" ||
+    code === "EAI_AGAIN" ||
+    message.includes("self-signed certificate")
+  );
+}
+
+process.on("unhandledRejection", (reason) => {
+  if (isTransientNetworkError(reason)) {
+    console.error("[UNHANDLED_REJECTION][TRANSIENT]", getErrorMessage(reason));
+    return;
+  }
+  console.error("[UNHANDLED_REJECTION]", reason);
+});
+
+process.on("uncaughtException", (error) => {
+  if (isTransientNetworkError(error)) {
+    console.error("[UNCAUGHT_EXCEPTION][TRANSIENT]", getErrorMessage(error));
+    return;
+  }
+  console.error("[UNCAUGHT_EXCEPTION][FATAL]", error);
+  setTimeout(() => process.exit(1), 500).unref();
+});
 
 const client = new Client({
   intents: [
@@ -56,28 +92,40 @@ try {
   console.log("DisTube berhasil diinisialisasi");
 } catch (error) {
   console.error("Error saat menginisialisasi DisTube:", error);
-  process.exit(1);
+  client.distube = null;
+}
+if (client.distube) {
+  client.distube.on("playSong", (queue, song) => {
+    queue.textChannel.send(
+      `🎵 Memutar: **${song.name}** - \`${song.formattedDuration}\``
+    );
+  });
+
+  client.distube.on("addSong", (queue, song) => {
+    queue.textChannel.send(
+      ` Ditambahkan ke antrian: **${song.name}** - \`${song.formattedDuration}\``
+    );
+  });
+
+  client.distube.on("finish", (queue) => {
+    queue.textChannel.send(" Antrian lagu telah selesai!");
+  });
+
+  client.distube.on("error", (channel, e) => {
+    const msg = getErrorMessage(e);
+    console.error(`Error di channel ${channel?.name || "unknown"}: ${msg}`);
+    if (channel && typeof channel.send === "function") {
+      channel.send("Terjadi kesalahan saat memutar lagu!").catch(() => { });
+    }
+  });
 }
 
-client.distube.on("playSong", (queue, song) => {
-  queue.textChannel.send(
-    `🎵 Memutar: **${song.name}** - \`${song.formattedDuration}\``
-  );
+client.on("error", (error) => {
+  console.error("[DISCORD_CLIENT_ERROR]", error);
 });
 
-client.distube.on("addSong", (queue, song) => {
-  queue.textChannel.send(
-    ` Ditambahkan ke antrian: **${song.name}** - \`${song.formattedDuration}\``
-  );
-});
-
-client.distube.on("finish", (queue) => {
-  queue.textChannel.send(" Antrian lagu telah selesai!");
-});
-
-client.distube.on("error", (channel, e) => {
-  console.error(`Error di channel ${channel.name}: ${e}`);
-  channel.send("Terjadi kesalahan saat memutar lagu!");
+client.on("shardError", (error) => {
+  console.error("[DISCORD_SHARD_ERROR]", error);
 });
 
 const welcomeChannelsPath = path.join(__dirname, "data/welcomeChannels.json");
@@ -259,6 +307,9 @@ const pluginWatcher = handler(client);
 
 client.on("messageCreate", async (message) => {
   if (message.author.bot) return;
+  if (message.guild) {
+    incrementMessageCount(message.guild.id, message.author.id);
+  }
   console.log(
     `┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ┃ 📩 New Message Received
@@ -299,7 +350,7 @@ client.on("messageCreate", async (message) => {
       await message.reply(responseData.result);
       return;
     } catch (error) {
-      console.error("Smart Reply Error:", error);
+      console.error("Smart Reply Error:", getErrorMessage(error));
     }
   }
 
@@ -657,11 +708,19 @@ client.on("interactionCreate", async (interaction) => {
         .setStyle(TextInputStyle.Paragraph)
         .setPlaceholder("Share your thoughts anonymously...")
         .setRequired(true)
-        .setMinLength(10)
+        .setMinLength(1)
         .setMaxLength(1000);
 
+      const imageInput = new TextInputBuilder()
+        .setCustomId("confession_image")
+        .setLabel("Image URL (Opsional)")
+        .setStyle(TextInputStyle.Short)
+        .setPlaceholder("Link gambar (https://...)")
+        .setRequired(false);
+
       const firstActionRow = new ActionRowBuilder().addComponents(confessionInput);
-      modal.addComponents(firstActionRow);
+      const secondActionRow = new ActionRowBuilder().addComponents(imageInput);
+      modal.addComponents(firstActionRow, secondActionRow);
 
       await interaction.showModal(modal);
     } else if (customId.startsWith("confession_reply_")) {
@@ -902,6 +961,8 @@ client.on("interactionCreate", async (interaction) => {
       const confessionBoxNumber = parts[3];
 
       const confessionText = interaction.fields.getTextInputValue("confession_text");
+      let imageUrl = null;
+      try { imageUrl = interaction.fields.getTextInputValue("confession_image"); } catch (e) {}
       const channel = interaction.guild.channels.cache.get(channelId);
 
       if (!channel) {
@@ -945,6 +1006,10 @@ client.on("interactionCreate", async (interaction) => {
         .setDescription(confessionText)
         .setFooter({ text: `Confession Box #${confessionId} • ${interaction.guild.name}` })
         .setTimestamp();
+
+      if (imageUrl && (imageUrl.startsWith("http://") || imageUrl.startsWith("https://"))) {
+        try { confessionEmbed.setImage(imageUrl); } catch(e) {}
+      }
 
       // Add reply button
       const replyButton = new ButtonBuilder()
@@ -1005,6 +1070,7 @@ client.on("interactionCreate", async (interaction) => {
             "Click the button below to submit your confession.\n\n" +
             "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n" +
             "✨ Your identity will remain completely anonymous\n" +
+            "📸 You can also attach an image via URL\n" +
             "💬 Be respectful and kind\n" +
             "🔒 Your confession will be posted in this channel"
           )
@@ -1129,7 +1195,12 @@ client.on("interactionCreate", async (interaction) => {
 const configPath = path.join(__dirname, "data/scheduleConfig.json");
 let scheduleConfig = {};
 if (fs.existsSync(configPath)) {
-  scheduleConfig = JSON.parse(fs.readFileSync(configPath, "utf8"));
+  try {
+    scheduleConfig = JSON.parse(fs.readFileSync(configPath, "utf8"));
+  } catch (error) {
+    console.error("Gagal parse scheduleConfig.json:", error);
+    scheduleConfig = {};
+  }
 }
 async function generateDailyMessage(guildName, dayName, dateStr) {
   try {
@@ -1145,7 +1216,7 @@ async function generateDailyMessage(guildName, dayName, dateStr) {
 
     return null;
   } catch (error) {
-    console.error('❌ Error generating daily message:', error);
+    console.error("❌ Error generating daily message:", getErrorMessage(error));
     return null;
   }
 }
@@ -1189,7 +1260,7 @@ async function sendScheduledMessage() {
         `✅ Pesan jadwal terkirim ke server: ${guild.name} (${guildId}) ${gptMessage ? '(AI-generated)' : '(Fallback)'}`
       );
     } catch (error) {
-      console.error(`❌ Gagal mengirim pesan ke server ${guild.name}:`, error);
+      console.error(`❌ Gagal mengirim pesan ke server ${guild.name}:`, getErrorMessage(error));
     }
   }
 }

@@ -41,6 +41,7 @@ module.exports = {
                 "Click the button below to submit your confession.\n\n" +
                 "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n" +
                 "✨ Your identity will remain completely anonymous.\n\n" +
+                "📸 You can also attach an image via URL.\n\n" +
                 "💬 Be respectful and kind.\n\n" +
                 "🔒 Your confession will be posted in this channel"
             )
