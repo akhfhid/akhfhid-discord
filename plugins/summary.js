@@ -4,7 +4,7 @@ const { summarizeChat } = require("../utils/aiHelper");
 module.exports = {
     name: "summary",
     alias: ["rangkum", "sum"],
-    description: "Summarize channel activity",
+    description: "Merangkum aktivitas chat channel",
 
     run: async (client, message, args) => {
         let channel = message.channel;
@@ -15,21 +15,21 @@ module.exports = {
             if (targetChannel && targetChannel.isTextBased()) {
                 channel = targetChannel;
             } else {
-                return message.reply("Invalid channel or not a text channel.");
+                return message.reply("Channel tidak valid atau bukan channel teks.");
             }
         }
 
         let seconds = 0;
         const loadingEmbed = new EmbedBuilder()
             .setColor('#FFFF00')
-            .setTitle('📝 Chat Summary')
-            .setDescription(`Analyzing messages in ${channel.toString()}...`)
+            .setTitle('📝 Ringkasan Chat')
+            .setDescription(`Sedang menganalisis pesan di ${channel.toString()}...`)
             .setTimestamp()
             .addFields(
-                { name: '⏱️ Duration', value: `0 Sec`, inline: true },
-                { name: '📊 Status', value: `Fetching messages...`, inline: true }
+                { name: '⏱️ Durasi', value: `0 Detik`, inline: true },
+                { name: '📊 Status', value: `Mengambil pesan...`, inline: true }
             )
-            .setFooter({ text: `Requested by ${message.author.tag}` });
+            .setFooter({ text: `Diminta oleh ${message.author.tag}` });
 
         const loadingMsg = await message.reply({ embeds: [loadingEmbed] });
 
@@ -37,8 +37,8 @@ module.exports = {
             seconds++;
             const updated = EmbedBuilder.from(loadingEmbed)
                 .setFields(
-                    { name: '⏱️ Duration', value: `${seconds} Sec`, inline: true },
-                    { name: '📊 Status', value: `Processing content...`, inline: true }
+                    { name: '⏱️ Durasi', value: `${seconds} Detik`, inline: true },
+                    { name: '📊 Status', value: `Memproses konten...`, inline: true }
                 );
             loadingMsg.edit({ embeds: [updated] }).catch(() => { });
         }, 1000);
@@ -52,7 +52,7 @@ module.exports = {
 
             if (!chatContent) {
                 clearInterval(timer);
-                return loadingMsg.edit({ content: "No messages found to summarize.", embeds: [] });
+                return loadingMsg.edit({ content: "Tidak ada pesan untuk dirangkum.", embeds: [] });
             }
 
             const summary = await summarizeChat(chatContent);
@@ -61,8 +61,8 @@ module.exports = {
 
             const embed = new EmbedBuilder()
                 .setColor("#00AAFF")
-                .setTitle("Chat Summary Report")
-                .setDescription(`**Summary of recent conversation in ${channel.toString()}**\n\n${summary}`)
+                .setTitle("Laporan Ringkasan Chat")
+                .setDescription(`**Ringkasan percakapan terbaru di ${channel.toString()}**\n\n${summary}`)
                 .addFields(
                     {
                         name: "Channel",
@@ -70,17 +70,17 @@ module.exports = {
                         inline: true
                     },
                     {
-                        name: "Messages Analyzed",
-                        value: `\`${fetchedMessages.size} messages\``,
+                        name: "Pesan Dianalisis",
+                        value: `\`${fetchedMessages.size} pesan\``,
                         inline: true
                     },
                     {
-                        name: "⏱️ Duration",
-                        value: `\`${seconds} Sec\``,
+                        name: "⏱️ Durasi",
+                        value: `\`${seconds} Detik\``,
                         inline: true
                     }
                 )
-                .setFooter({ text: `Requested by ${message.author.tag}` })
+                .setFooter({ text: `Diminta oleh ${message.author.tag}` })
                 .setTimestamp();
 
             await loadingMsg.edit({ content: null, embeds: [embed] });
@@ -88,7 +88,7 @@ module.exports = {
         } catch (error) {
             clearInterval(timer);
             console.error("Summary Error:", error);
-            await loadingMsg.edit({ content: "An error occurred while generating the summary.", embeds: [] });
+            await loadingMsg.edit({ content: "Terjadi kesalahan saat membuat ringkasan.", embeds: [] });
         }
 
     }

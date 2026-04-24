@@ -1,5 +1,5 @@
-const { generateText } = require("../utils/aiHelper");
-const { buildContext } = require("../utils/contextHelper");
+const { generateText, buildSessionKey } = require("../utils/aiHelper");
+const { buildContext, convertAtUsernamesToMentions } = require("../utils/contextHelper");
 const { EmbedBuilder } = require("discord.js");
 
 module.exports = {
@@ -54,11 +54,21 @@ module.exports = {
 
       const { text, systemPrompt } = await buildContext(client, message, args);
 
-      const responseData = await generateText(text, systemPrompt, message.author.id);
+      const sessionKey = buildSessionKey(message.author.id, message.guild?.id, "chat");
+      const responseData = await generateText(text, systemPrompt, sessionKey);
+      const mentionSafe = convertAtUsernamesToMentions(responseData.result, message.guild);
       const response = { data: responseData };
 
       clearInterval(timer);
       await loadingMsg.delete();
+
+      const safeReply =
+        String(mentionSafe || "").trim() ||
+        `Halo ${message.author.toString()}! Pesanmu sudah masuk, coba tulis pertanyaannya lebih spesifik ya.`;
+      const contentReply =
+        safeReply.length > 1900
+          ? `${safeReply.slice(0, 1900)}...`
+          : safeReply;
 
       const resultEmbed = new EmbedBuilder()
         .setColor("#0099FF")
@@ -66,7 +76,6 @@ module.exports = {
           name: "Akhfhid AI",
           iconURL: client.user.displayAvatarURL(),
         })
-        .setDescription(response.data.result)
         .addFields(
           { name: "👤 Asking by", value: message.author.tag, inline: true },
           {
@@ -74,12 +83,16 @@ module.exports = {
             value: response.data.responseTime,
             inline: true,
           },
-          { name: "🌐 Server", value: message.guild.name, inline: true }
+          { name: "🌐 Server", value: message.guild?.name || "Direct Message", inline: true }
         )
         .setFooter({ text: `requested by ${message.author.tag}` })
         .setTimestamp();
 
-      await message.reply({ embeds: [resultEmbed] });
+      await message.reply({
+        content: contentReply,
+        embeds: [resultEmbed],
+        allowedMentions: { parse: ["users"] },
+      });
     } catch (error) {
       console.error("Error saat memanggil API AI:", error);
 

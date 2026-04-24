@@ -9,9 +9,9 @@ const {
   ButtonStyle,
   StringSelectMenuBuilder,
 } = require("discord.js");
-const { checkToxic, generateText } = require("./utils/aiHelper");
+const { checkToxic, generateText, buildSessionKey } = require("./utils/aiHelper");
 const { incrementMessageCount } = require("./utils/messageCounter");
-const { buildContext } = require("./utils/contextHelper");
+const { buildContext, convertAtUsernamesToMentions } = require("./utils/contextHelper");
 const { YtDlpPlugin } = require("@distube/yt-dlp");
 const ffmpeg = require("ffmpeg-static");
 const { DisTube } = require("distube");
@@ -310,14 +310,16 @@ client.on("messageCreate", async (message) => {
   if (message.guild) {
     incrementMessageCount(message.guild.id, message.author.id);
   }
+  const guildName = message.guild?.name || "DM";
+  const guildId = message.guild?.id || "-";
   console.log(
     `┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ┃ 📩 New Message Received
 ┃ 
 ┃ 👤 User      : ${message.author.tag}
 ┃ 🆔 User ID   : ${message.author.id}
-┃ 🏠 Server    : ${message.guild.name}
-┃ 🆔 Server ID : ${message.guild.id}
+┃ 🏠 Server    : ${guildName}
+┃ 🆔 Server ID : ${guildId}
 ┃ 💬 Message   : ${message.content}
 ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`
   );
@@ -342,15 +344,46 @@ client.on("messageCreate", async (message) => {
 
   // Smart Reply
   const prefix = process.env.PREFIX || "!";
-  if (message.mentions.has(client.user) && !message.content.startsWith(prefix)) {
+  const startsWithPrefix = message.content.startsWith(prefix);
+  const isMentioningBot = message.mentions.has(client.user);
+  let isReplyingToBot = false;
+  if (!startsWithPrefix && message.reference?.messageId) {
+    try {
+      const referenced = await message.fetchReference();
+      isReplyingToBot = referenced?.author?.id === client.user.id;
+    } catch {
+      isReplyingToBot = false;
+    }
+  }
+
+  if ((isMentioningBot || isReplyingToBot) && !startsWithPrefix) {
     try {
       await message.channel.sendTyping();
       const { text, systemPrompt } = await buildContext(client, message);
-      const responseData = await generateText(text, systemPrompt, message.author.id);
-      await message.reply(responseData.result);
+      const safeText =
+        String(text || "").trim() ||
+        `Pengguna ${message.author.username} mention kamu tanpa pertanyaan. Sapa dia dengan ramah dan tanyakan dia butuh bantuan apa.`;
+
+      const sessionKey = buildSessionKey(message.author.id, message.guild?.id, "chat");
+      const responseData = await generateText(safeText, systemPrompt, sessionKey);
+      const mentionSafe = convertAtUsernamesToMentions(responseData.result, message.guild);
+      const finalReply =
+        String(mentionSafe || "").trim() ||
+        `Halo ${message.author.toString()}! Aku online. Kamu bisa langsung tanya apa aja ya.`;
+
+      const clipped = finalReply.length > 1900 ? `${finalReply.slice(0, 1900)}...` : finalReply;
+      await message.reply({
+        content: clipped,
+        allowedMentions: { parse: ["users"] },
+      });
       return;
     } catch (error) {
       console.error("Smart Reply Error:", getErrorMessage(error));
+      try {
+        await message.reply("Maaf, tadi sempat error saat balas mention. Coba kirim ulang pertanyaannya ya.");
+      } catch {
+        // ignore
+      }
     }
   }
 
@@ -360,7 +393,7 @@ client.on("messageCreate", async (message) => {
   commandCounter++;
   cachedStats.commandsRun = commandCounter;
 
-  if (!message.content.startsWith(prefix)) return;
+  if (!startsWithPrefix) return;
 
   const args = message.content.slice(prefix.length).trim().split(/ +/);
   const cmd = args.shift().toLowerCase();
@@ -530,6 +563,9 @@ client.on("interactionCreate", async (interaction) => {
     }
   } else if (interaction.isButton()) {
     const customId = interaction.customId;
+
+    // Leaderboard buttons are handled by their own message collector.
+    if (customId.startsWith("lb_")) return;
 
     if (customId === "help_back_button") {
       const commands = Array.from(interaction.client.commands.values());

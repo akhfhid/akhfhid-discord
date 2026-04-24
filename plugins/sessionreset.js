@@ -1,4 +1,4 @@
-const { resetSession } = require("../utils/aiHelper");
+const { resetSession, buildSessionKey } = require("../utils/aiHelper");
 
 module.exports = {
     name: "sessionreset",
@@ -15,11 +15,12 @@ module.exports = {
         }
 
         const targetUser = mentioned || message.author;
-        const removedCount = resetSession(targetUser.id);
+        const sessionKey = buildSessionKey(targetUser.id, message.guild?.id, "chat");
+        const removedCount = resetSession(sessionKey);
         const turnCount = Math.ceil(removedCount / 2);
 
         await message.reply(
-            `Session AI untuk ${targetUser.username} direset. ` +
+            `Session AI untuk ${targetUser.username} di server ini direset. ` +
             `History terhapus: ${removedCount} pesan (${turnCount} turn).`
         );
     },

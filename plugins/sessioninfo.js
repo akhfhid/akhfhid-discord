@@ -1,4 +1,4 @@
-const { getSessionLength, sessionsEnabled } = require("../utils/aiHelper");
+const { getSessionLength, sessionsEnabled, buildSessionKey } = require("../utils/aiHelper");
 
 module.exports = {
     name: "sessioninfo",
@@ -20,11 +20,12 @@ module.exports = {
         }
 
         const targetUser = mentioned || message.author;
-        const messageCount = getSessionLength(targetUser.id);
+        const sessionKey = buildSessionKey(targetUser.id, message.guild?.id, "chat");
+        const messageCount = getSessionLength(sessionKey);
         const turnCount = Math.ceil(messageCount / 2);
 
         await message.reply(
-            `History AI untuk ${targetUser.username}: ${messageCount} pesan (${turnCount} turn).`
+            `History AI untuk ${targetUser.username} di server ini: ${messageCount} pesan (${turnCount} turn).`
         );
     },
 };

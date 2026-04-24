@@ -1,9 +1,77 @@
 const nanobanana = require("../utils/nanobanana");
+const fs = require("fs");
+const path = require("path");
 const {
     EmbedBuilder,
     ActionRowBuilder,
     StringSelectMenuBuilder,
 } = require("discord.js");
+
+const img2imgChannelPath = path.join(__dirname, "..", "data", "img2imgChannels.json");
+let img2imgChannels = {};
+
+if (fs.existsSync(img2imgChannelPath)) {
+    try {
+        img2imgChannels = JSON.parse(fs.readFileSync(img2imgChannelPath, "utf8"));
+    } catch (error) {
+        console.error("Failed to load img2img channel config:", error?.message || error);
+        img2imgChannels = {};
+    }
+}
+
+function saveImg2imgChannels() {
+    try {
+        fs.writeFileSync(img2imgChannelPath, JSON.stringify(img2imgChannels, null, 2), "utf8");
+    } catch (error) {
+        console.error("Failed to save img2img channel config:", error?.message || error);
+    }
+}
+
+function buildGuideEmbeds(prefix = "!") {
+    const examplePrompts = [
+        "jadiin gaya anime clean, soft lighting, detail wajah tetap sama",
+        "ubah jadi cyberpunk neon city, hujan malam, cinematic",
+        "ubah jadi watercolor painting, warna pastel, dreamy mood",
+        "buat gaya photobox estetik dengan background pastel",
+    ];
+
+    const styleLines = templates
+        .map((t) => `• \`${t.value}\` - ${t.label}`)
+        .join("\n");
+
+    const guideEmbed = new EmbedBuilder()
+        .setColor("#00B4D8")
+        .setTitle("🖼️ Img2Img Zone")
+        .setDescription(
+            "Channel ini khusus untuk edit gambar AI.\n\n" +
+            "**Cara pakai cepat:**\n" +
+            `1. Upload gambar\n` +
+            `2. Ketik \`${prefix}img2img\` di caption / pesan\n` +
+            "3. Pilih style di menu UI\n" +
+            "4. Tunggu hasilnya muncul"
+        )
+        .addFields(
+            {
+                name: "Contoh Prompt Custom",
+                value: examplePrompts.map((p, i) => `${i + 1}. ${p}`).join("\n"),
+            },
+            {
+                name: "Tips Biar Hasil Bagus",
+                value:
+                    "• Jelasin style + mood + lighting\n" +
+                    "• Sebutkan elemen penting yang harus dipertahankan\n" +
+                    "• Hindari prompt terlalu pendek",
+            }
+        )
+        .setFooter({ text: "Gunakan style template atau Custom Prompt sesuai kebutuhan." });
+
+    const stylesEmbed = new EmbedBuilder()
+        .setColor("#0077B6")
+        .setTitle("🎨 Daftar Style Img2Img")
+        .setDescription(styleLines.slice(0, 4000));
+
+    return [guideEmbed, stylesEmbed];
+}
 
 function extractImageUrl(value) {
     if (!value) return null;
@@ -158,6 +226,82 @@ module.exports = {
     description: "Transform an image using AI templates",
 
     run: async (client, message, args) => {
+        if (message.guild) {
+            const sub = String(args[0] || "").toLowerCase();
+            const isAdmin = message.member?.permissions?.has("Administrator") ||
+                message.member?.permissions?.has("ManageGuild");
+
+            if (["set", "setchannel", "channel"].includes(sub)) {
+                if (!isAdmin) {
+                    return message.reply("Hanya admin yang bisa set channel khusus img2img.");
+                }
+
+                const targetChannel =
+                    message.mentions.channels.first() ||
+                    (String(args[1] || "").toLowerCase() === "here" ? message.channel : null);
+                if (!targetChannel) {
+                    return message.reply(
+                        "Sertakan channel. Contoh: `!img2img set #edit-gambar` atau `!img2img set here`."
+                    );
+                }
+
+                img2imgChannels[message.guild.id] = targetChannel.id;
+                saveImg2imgChannels();
+                const prefix = process.env.PREFIX || "!";
+                const embeds = buildGuideEmbeds(prefix);
+                try {
+                    await targetChannel.send({ embeds });
+                } catch (error) {
+                    console.error("Failed to send img2img guide panel:", error?.message || error);
+                }
+                return message.reply(
+                    `Channel khusus img2img diset ke ${targetChannel.toString()}.\n` +
+                    `Panel panduan sudah dikirim di channel tersebut.`
+                );
+            }
+
+            if (sub === "disable") {
+                if (!isAdmin) {
+                    return message.reply("Hanya admin yang bisa disable channel khusus img2img.");
+                }
+                delete img2imgChannels[message.guild.id];
+                saveImg2imgChannels();
+                return message.reply("Channel khusus img2img dinonaktifkan. Command bisa dipakai di channel mana saja.");
+            }
+
+            if (sub === "status") {
+                const configuredChannelId = img2imgChannels[message.guild.id];
+                if (!configuredChannelId) {
+                    return message.reply("Belum ada channel khusus img2img. Pakai `!img2img set #channel`.");
+                }
+                return message.reply(`Channel khusus img2img saat ini: <#${configuredChannelId}>`);
+            }
+
+            if (sub === "guide" || sub === "panel") {
+                const targetChannel =
+                    message.mentions.channels.first() ||
+                    (String(args[1] || "").toLowerCase() === "here" ? message.channel : null) ||
+                    (img2imgChannels[message.guild.id]
+                        ? message.guild.channels.cache.get(img2imgChannels[message.guild.id])
+                        : message.channel);
+                if (!targetChannel) {
+                    return message.reply("Channel tujuan guide tidak ditemukan.");
+                }
+                const prefix = process.env.PREFIX || "!";
+                const embeds = buildGuideEmbeds(prefix);
+                await targetChannel.send({ embeds });
+                return message.reply(`Guide img2img dikirim ke ${targetChannel.toString()}.`);
+            }
+
+            const configuredChannelId = img2imgChannels[message.guild.id];
+            if (configuredChannelId && message.channel.id !== configuredChannelId) {
+                return message.reply(
+                    `Command img2img hanya bisa dipakai di <#${configuredChannelId}>.\n` +
+                    `Admin bisa ubah dengan \`!img2img set #channel\` atau nonaktifkan dengan \`!img2img disable\`.`
+                );
+            }
+        }
+
         const attachment = message.attachments.first();
         const imageUrl = attachment ? attachment.url : args[0];
 
@@ -323,9 +467,14 @@ module.exports = {
             } catch (error) {
                 clearInterval(timer);
                 console.error("Error in img2img:", error);
+                const detail = String(error?.message || "")
+                    .replace(/^AIBanana API Error:\s*/i, "")
+                    .trim();
                 await interaction.editReply({
                     content:
-                        "❌ Failed to generate image. The API might be down or the image URL is invalid.",
+                        detail
+                            ? `❌ Failed to generate image: ${detail}`
+                            : "❌ Failed to generate image. The API might be down or the image URL is invalid.",
                     embeds: [],
                 });
             }
