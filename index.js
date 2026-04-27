@@ -15,6 +15,8 @@ const { buildContext, convertAtUsernamesToMentions } = require("./utils/contextH
 const { YtDlpPlugin } = require("@distube/yt-dlp");
 const ffmpeg = require("ffmpeg-static");
 const { DisTube } = require("distube");
+const axios = require("axios");
+const cheerio = require("cheerio");
 const fs = require("fs");
 const cron = require("node-cron");
 let commandCounter = 0;
@@ -47,6 +49,142 @@ function isTransientNetworkError(err) {
     code === "EAI_AGAIN" ||
     message.includes("self-signed certificate")
   );
+}
+
+function getFinalResponseUrl(response) {
+  return response?.request?.res?.responseUrl || null;
+}
+
+function normalizeImageCandidateUrl(candidate, baseUrl) {
+  if (!candidate || typeof candidate !== "string") return null;
+  const trimmed = candidate.trim();
+  if (!trimmed) return null;
+  if (trimmed.startsWith("data:image/")) return trimmed;
+
+  try {
+    const parsed = new URL(trimmed, baseUrl);
+    if (!["http:", "https:"].includes(parsed.protocol)) return null;
+    return parsed.toString();
+  } catch {
+    return null;
+  }
+}
+
+function extractFirstHttpUrl(value) {
+  const text = String(value || "").trim();
+  if (!text) return null;
+  if (text.startsWith("data:image/")) return text;
+
+  const matches = text.match(/https?:\/\/[^\s<>"'`]+/gi);
+  if (!matches || !matches.length) return text;
+
+  return matches[0].replace(/[),.;!?]+$/, "");
+}
+
+function getUploadBaseUrl() {
+  let base = String(process.env.UPLOAD_BASE_URL || "").trim();
+
+  if (!base) {
+    const rawBaseApi = String(process.env.BASE_URL || "").trim();
+    if (rawBaseApi) {
+      try {
+        const parsed = new URL(rawBaseApi);
+        parsed.pathname = "/";
+        parsed.search = "";
+        parsed.hash = "";
+        base = parsed.toString();
+      } catch {
+        base = "";
+      }
+    }
+  }
+
+  if (!base) {
+    base = "https://discord.akhfhid.my.id";
+  }
+
+  return base.replace(/\/+$/, "");
+}
+
+function isLikelyImagePath(pathname) {
+  const cleanPath = String(pathname || "").split("?")[0].split("#")[0].toLowerCase();
+  return /\.(jpg|jpeg|png|webp|gif)$/i.test(cleanPath);
+}
+
+function isTrustedUploadImageUrl(candidateUrl) {
+  if (!candidateUrl || typeof candidateUrl !== "string") return false;
+  try {
+    const uploadBase = new URL(getUploadBaseUrl());
+    const target = new URL(candidateUrl);
+    const sameHost = target.host.toLowerCase() === uploadBase.host.toLowerCase();
+    if (!sameHost) return false;
+    const pathname = String(target.pathname || "");
+    if (!pathname || pathname === "/") return false;
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+async function resolveConfessionImageUrl(inputUrl) {
+  const extractedInput = extractFirstHttpUrl(inputUrl);
+  const normalizedInput = normalizeImageCandidateUrl(extractedInput);
+  if (!normalizedInput) return null;
+  if (normalizedInput.startsWith("data:image/")) return normalizedInput;
+  if (isTrustedUploadImageUrl(normalizedInput)) return normalizedInput;
+
+  const timeout = 10000;
+  const requestOptions = {
+    timeout,
+    maxRedirects: 10,
+    validateStatus: (status) => status >= 200 && status < 400,
+    headers: {
+      "User-Agent": "Mozilla/5.0 (ConfessionBot/1.0)",
+      Accept: "image/*,text/html;q=0.9,*/*;q=0.8",
+    },
+  };
+
+  try {
+    const headResponse = await axios.head(normalizedInput, requestOptions);
+    const contentType = String(headResponse.headers?.["content-type"] || "").toLowerCase();
+    const finalUrl = normalizeImageCandidateUrl(getFinalResponseUrl(headResponse)) || normalizedInput;
+    if (contentType.startsWith("image/")) {
+      return finalUrl;
+    }
+  } catch {
+    // Fallback to GET below when HEAD is blocked or unsupported.
+  }
+
+  try {
+    const getResponse = await axios.get(normalizedInput, requestOptions);
+    const contentType = String(getResponse.headers?.["content-type"] || "").toLowerCase();
+    const finalUrl = normalizeImageCandidateUrl(getFinalResponseUrl(getResponse)) || normalizedInput;
+
+    if (contentType.startsWith("image/")) {
+      return finalUrl;
+    }
+
+    if (!contentType.includes("text/html") || typeof getResponse.data !== "string") {
+      return null;
+    }
+
+    const $ = cheerio.load(getResponse.data);
+    const possibleMetaImage = [
+      $('meta[property="og:image:secure_url"]').attr("content"),
+      $('meta[property="og:image"]').attr("content"),
+      $('meta[name="twitter:image"]').attr("content"),
+      $('meta[name="twitter:image:src"]').attr("content"),
+      $('link[rel="image_src"]').attr("href"),
+    ].find(Boolean);
+
+    const normalizedMetaImage = normalizeImageCandidateUrl(possibleMetaImage, finalUrl);
+    if (normalizedMetaImage) return normalizedMetaImage;
+  } catch {
+    // fall through to permissive fallback
+  }
+
+  if (isLikelyImagePath(normalizedInput)) return normalizedInput;
+  return null;
 }
 
 process.on("unhandledRejection", (reason) => {
@@ -751,7 +889,7 @@ client.on("interactionCreate", async (interaction) => {
         .setCustomId("confession_image")
         .setLabel("Image URL (Opsional)")
         .setStyle(TextInputStyle.Short)
-        .setPlaceholder("Link gambar (https://...)")
+        .setPlaceholder("URL gambar, termasuk link hasil command !upload")
         .setRequired(false);
 
       const firstActionRow = new ActionRowBuilder().addComponents(confessionInput);
@@ -802,8 +940,16 @@ client.on("interactionCreate", async (interaction) => {
         .setMinLength(1)
         .setMaxLength(1000);
 
+      const replyImageInput = new TextInputBuilder()
+        .setCustomId("reply_image")
+        .setLabel("Image URL (Opsional)")
+        .setStyle(TextInputStyle.Short)
+        .setPlaceholder("URL gambar, termasuk link hasil command !upload")
+        .setRequired(false);
+
       const firstActionRow = new ActionRowBuilder().addComponents(replyInput);
-      modal.addComponents(firstActionRow);
+      const secondActionRow = new ActionRowBuilder().addComponents(replyImageInput);
+      modal.addComponents(firstActionRow, secondActionRow);
 
       await interaction.showModal(modal);
     } else if (customId.includes("_")) {
@@ -1010,6 +1156,7 @@ client.on("interactionCreate", async (interaction) => {
 
       // Defer the reply to prevent timeout, then delete it to keep it silent
       await interaction.deferReply({ ephemeral: true });
+      const resolvedImageUrl = await resolveConfessionImageUrl(imageUrl);
 
       // Load confession data to get and increment confession counter
       const fs = require("fs");
@@ -1043,8 +1190,8 @@ client.on("interactionCreate", async (interaction) => {
         .setFooter({ text: `Confession Box #${confessionId} • ${interaction.guild.name}` })
         .setTimestamp();
 
-      if (imageUrl && (imageUrl.startsWith("http://") || imageUrl.startsWith("https://"))) {
-        try { confessionEmbed.setImage(imageUrl); } catch(e) {}
+      if (resolvedImageUrl) {
+        try { confessionEmbed.setImage(resolvedImageUrl); } catch (e) {}
       }
 
       // Add reply button
@@ -1137,9 +1284,8 @@ client.on("interactionCreate", async (interaction) => {
 
       } catch (error) {
         console.error("Error posting confession:", error);
-        await interaction.reply({
-          content: "❌ Failed to post confession. Please try again.",
-          ephemeral: true
+        await interaction.editReply({
+          content: "❌ Failed to post confession. Please try again."
         });
       }
     } else if (interaction.customId.startsWith("confession_reply_modal_")) {
@@ -1151,6 +1297,8 @@ client.on("interactionCreate", async (interaction) => {
       const confessionId = parts[2];
 
       const replyText = interaction.fields.getTextInputValue("reply_text");
+      let replyImageUrl = null;
+      try { replyImageUrl = interaction.fields.getTextInputValue("reply_image"); } catch (e) {}
       const channel = interaction.guild.channels.cache.get(channelId);
 
       if (!channel) {
@@ -1162,6 +1310,7 @@ client.on("interactionCreate", async (interaction) => {
 
       // Defer the reply to prevent timeout
       await interaction.deferReply({ ephemeral: true });
+      const resolvedReplyImageUrl = await resolveConfessionImageUrl(replyImageUrl);
 
       // Get confession message ID
       const fs = require("fs");
@@ -1184,9 +1333,8 @@ client.on("interactionCreate", async (interaction) => {
       }
 
       if (!confessionMessageId) {
-        return await interaction.reply({
-          content: "❌ Original confession not found!",
-          ephemeral: true
+        return await interaction.editReply({
+          content: "❌ Original confession not found!"
         });
       }
 
@@ -1214,15 +1362,18 @@ client.on("interactionCreate", async (interaction) => {
           .setFooter({ text: `Confession #${confessionId} • ${interaction.guild.name}` })
           .setTimestamp();
 
+        if (resolvedReplyImageUrl) {
+          try { replyEmbed.setImage(resolvedReplyImageUrl); } catch (e) {}
+        }
+
         await thread.send({ embeds: [replyEmbed] });
 
         // Delete the deferred reply to keep it silent
         await interaction.deleteReply();
       } catch (error) {
         console.error("Error posting reply:", error);
-        await interaction.reply({
-          content: "❌ Failed to post reply. Please try again.",
-          ephemeral: true
+        await interaction.editReply({
+          content: "❌ Failed to post reply. Please try again."
         });
       }
     }
