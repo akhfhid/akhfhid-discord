@@ -19,6 +19,9 @@ const axios = require("axios");
 const cheerio = require("cheerio");
 const fs = require("fs");
 const cron = require("node-cron");
+const deepimg = require("./utils/deepimg");
+const nanobanana = require("./utils/nanobanana");
+const { TXT2IMG_TEMPLATES } = require("./utils/txt2imgTemplates");
 let commandCounter = 0;
 const path = require("path");
 const commandUsage = new Map();
@@ -126,6 +129,101 @@ function isTrustedUploadImageUrl(candidateUrl) {
   }
 }
 
+function extractImageUrlFromLdJsonValue(value, baseUrl) {
+  if (!value) return null;
+
+  if (typeof value === "string") {
+    return normalizeImageCandidateUrl(value, baseUrl);
+  }
+
+  if (Array.isArray(value)) {
+    for (const item of value) {
+      const candidate = extractImageUrlFromLdJsonValue(item, baseUrl);
+      if (candidate) return candidate;
+    }
+    return null;
+  }
+
+  if (typeof value === "object") {
+    const directKeys = ["url", "contentUrl", "@id", "src", "image"];
+    for (const key of directKeys) {
+      const candidate = extractImageUrlFromLdJsonValue(value[key], baseUrl);
+      if (candidate) return candidate;
+    }
+  }
+
+  return null;
+}
+
+function isPinterestUrl(candidateUrl) {
+  if (!candidateUrl) return false;
+  try {
+    const host = new URL(candidateUrl).hostname.toLowerCase();
+    return host === "pin.it" || host.endsWith(".pin.it") || host === "pinterest.com" || host.endsWith(".pinterest.com");
+  } catch {
+    return false;
+  }
+}
+
+function pickBestImageCandidate(candidates = []) {
+  if (!Array.isArray(candidates) || candidates.length === 0) return null;
+
+  const cleaned = [...new Set(candidates.filter(Boolean))];
+  const gif = cleaned.find((url) => /\.gif($|[?#])/i.test(url));
+  if (gif) return gif;
+
+  const originalPin = cleaned.find((url) => /i\.pinimg\.com\/originals\//i.test(url));
+  if (originalPin) return originalPin;
+
+  return cleaned[0] || null;
+}
+
+function extractImageUrlFromHtml(html, baseUrl) {
+  const $ = cheerio.load(html);
+  const candidates = [];
+
+  const metaCandidate = [
+    $('meta[property="og:image:secure_url"]').attr("content"),
+    $('meta[property="og:image"]').attr("content"),
+    $('meta[name="twitter:image"]').attr("content"),
+    $('meta[name="twitter:image:src"]').attr("content"),
+    $('link[rel="image_src"]').attr("href"),
+  ].find(Boolean);
+  const normalizedMetaImage = normalizeImageCandidateUrl(metaCandidate, baseUrl);
+  if (normalizedMetaImage) candidates.push(normalizedMetaImage);
+
+  // Pinterest pages often expose direct media in JSON-LD rather than og:image.
+  const jsonLdNodes = $('script[type="application/ld+json"]');
+  for (let i = 0; i < jsonLdNodes.length; i++) {
+    const rawJson = $(jsonLdNodes[i]).html();
+    if (!rawJson) continue;
+    try {
+      const parsed = JSON.parse(rawJson);
+      const candidate = extractImageUrlFromLdJsonValue(parsed, baseUrl);
+      if (candidate) candidates.push(candidate);
+    } catch {
+      // ignore malformed json-ld blocks
+    }
+  }
+
+  const pinImgMatch = String(html).match(/https?:\/\/i\.pinimg\.com\/[^\s"'<>]+/i);
+  if (pinImgMatch?.[0]) {
+    const fromPinimg = normalizeImageCandidateUrl(pinImgMatch[0], baseUrl);
+    if (fromPinimg) candidates.push(fromPinimg);
+  }
+
+  const firstImg = $("img").first().attr("src");
+  const normalizedFirstImg = normalizeImageCandidateUrl(firstImg, baseUrl);
+  if (normalizedFirstImg) candidates.push(normalizedFirstImg);
+
+  // For Pinterest we often get both static preview + original media.
+  if (isPinterestUrl(baseUrl)) {
+    return pickBestImageCandidate(candidates);
+  }
+
+  return candidates[0] || null;
+}
+
 async function resolveConfessionImageUrl(inputUrl) {
   const extractedInput = extractFirstHttpUrl(inputUrl);
   const normalizedInput = normalizeImageCandidateUrl(extractedInput);
@@ -168,23 +266,101 @@ async function resolveConfessionImageUrl(inputUrl) {
       return null;
     }
 
-    const $ = cheerio.load(getResponse.data);
-    const possibleMetaImage = [
-      $('meta[property="og:image:secure_url"]').attr("content"),
-      $('meta[property="og:image"]').attr("content"),
-      $('meta[name="twitter:image"]').attr("content"),
-      $('meta[name="twitter:image:src"]').attr("content"),
-      $('link[rel="image_src"]').attr("href"),
-    ].find(Boolean);
-
-    const normalizedMetaImage = normalizeImageCandidateUrl(possibleMetaImage, finalUrl);
-    if (normalizedMetaImage) return normalizedMetaImage;
+    const resolvedFromHtml = extractImageUrlFromHtml(getResponse.data, finalUrl);
+    if (resolvedFromHtml) return resolvedFromHtml;
   } catch {
     // fall through to permissive fallback
   }
 
   if (isLikelyImagePath(normalizedInput)) return normalizedInput;
   return null;
+}
+
+function extractFirstImageUrl(value) {
+  if (!value) return null;
+  if (typeof value === "string") {
+    return /^https?:\/\//i.test(value) ? value : null;
+  }
+  if (Array.isArray(value)) {
+    for (const item of value) {
+      const found = extractFirstImageUrl(item);
+      if (found) return found;
+    }
+    return null;
+  }
+  if (typeof value === "object") {
+    const priorityKeys = [
+      "url",
+      "image",
+      "imageUrl",
+      "output",
+      "result",
+      "resultUrl",
+      "outputUrl",
+      "generatedImage",
+      "generatedImages",
+      "images",
+      "data",
+    ];
+    for (const key of priorityKeys) {
+      if (Object.prototype.hasOwnProperty.call(value, key)) {
+        const found = extractFirstImageUrl(value[key]);
+        if (found) return found;
+      }
+    }
+    for (const nested of Object.values(value)) {
+      const found = extractFirstImageUrl(nested);
+      if (found) return found;
+    }
+  }
+  return null;
+}
+
+function buildTxt2imgTemplateSelect(customId) {
+  return new StringSelectMenuBuilder()
+    .setCustomId(customId)
+    .setPlaceholder("Pilih template txt2img...")
+    .addOptions([
+      {
+        label: "Custom (Isi Manual)",
+        description: "Tulis prompt sendiri via form",
+        value: "custom",
+      },
+      ...TXT2IMG_TEMPLATES.map((t) => ({
+        label: t.label,
+        description: t.description,
+        value: t.value,
+      })),
+    ]);
+}
+
+async function generateTxt2ImgWithFallback(prompt) {
+  const deepimgResult = await deepimg(prompt);
+  if (deepimgResult?.status && deepimgResult?.image) {
+    return {
+      imageUrl: deepimgResult.image,
+      provider: "DeepImg",
+      fallbackNote: null,
+    };
+  }
+
+  const deepimgError = deepimgResult?.msg || "DeepImg gagal memproses prompt.";
+
+  try {
+    const fallback = await nanobanana({ prompt });
+    const fallbackImageUrl = extractFirstImageUrl(fallback);
+    if (!fallbackImageUrl) {
+      throw new Error("URL gambar dari fallback tidak ditemukan.");
+    }
+    return {
+      imageUrl: fallbackImageUrl,
+      provider: "AIBanana (fallback)",
+      fallbackNote: deepimgError,
+    };
+  } catch (fallbackError) {
+    const fallbackMsg = fallbackError?.message || "fallback provider error";
+    throw new Error(`${deepimgError} | Fallback gagal: ${fallbackMsg}`);
+  }
 }
 
 process.on("unhandledRejection", (reason) => {
@@ -649,7 +825,84 @@ client.on("interactionCreate", async (interaction) => {
       return interaction.reply({ content: "Terjadi error.", ephemeral: true });
     }
   } else if (interaction.isStringSelectMenu()) {
-    if (interaction.customId === "help_menu_select") {
+    if (interaction.customId.startsWith("txt2img_template_")) {
+      const ownerId = interaction.customId.replace("txt2img_template_", "");
+      if (ownerId && ownerId !== interaction.user.id) {
+        return interaction.reply({
+          content: "Menu ini bukan milik kamu.",
+          ephemeral: true,
+        });
+      }
+
+      const selectedValue = interaction.values[0];
+      if (selectedValue === "custom") {
+        const { ModalBuilder, TextInputBuilder, TextInputStyle } = require("discord.js");
+        const modal = new ModalBuilder()
+          .setCustomId(`txt2img_modal_${interaction.user.id}`)
+          .setTitle("Txt2Img Custom Prompt");
+
+        const promptInput = new TextInputBuilder()
+          .setCustomId("txt2img_prompt")
+          .setLabel("Prompt Gambar")
+          .setStyle(TextInputStyle.Paragraph)
+          .setPlaceholder("Contoh: kota cyberpunk malam hujan, neon, ultra detail")
+          .setRequired(true)
+          .setMinLength(3)
+          .setMaxLength(1000);
+
+        modal.addComponents(new ActionRowBuilder().addComponents(promptInput));
+        return interaction.showModal(modal);
+      }
+
+      const selectedTemplate = TXT2IMG_TEMPLATES.find((t) => t.value === selectedValue);
+      if (!selectedTemplate) {
+        return interaction.update({
+          content: "Template tidak valid.",
+          embeds: [],
+          components: [],
+        });
+      }
+
+      const loadingEmbed = new EmbedBuilder()
+        .setColor("#F7B801")
+        .setTitle("🎨 Txt2Img Sedang Diproses")
+        .setDescription(`**Template:** ${selectedTemplate.label}\n**Prompt:** ${selectedTemplate.prompt}`)
+        .setFooter({ text: `Requested by ${interaction.user.tag}` })
+        .setTimestamp();
+
+      await interaction.update({
+        content: null,
+        embeds: [loadingEmbed],
+        components: [],
+      });
+
+      try {
+        const generated = await generateTxt2ImgWithFallback(selectedTemplate.prompt);
+        const doneEmbed = new EmbedBuilder()
+          .setColor("#2DC653")
+          .setTitle("✅ Hasil Txt2Img")
+          .setDescription(
+            `**Template:** ${selectedTemplate.label}\n` +
+            `**Provider:** ${generated.provider}` +
+            (generated.fallbackNote ? `\n**Catatan:** ${generated.fallbackNote}` : "")
+          )
+          .setImage(generated.imageUrl)
+          .setFooter({ text: `Only visible to ${interaction.user.tag}` })
+          .setTimestamp();
+
+        await interaction.editReply({
+          content: null,
+          embeds: [doneEmbed],
+          components: [],
+        });
+      } catch (error) {
+        await interaction.editReply({
+          content: `❌ Gagal generate gambar.\n${error?.message || "Unknown error"}`,
+          embeds: [],
+          components: [],
+        });
+      }
+    } else if (interaction.customId === "help_menu_select") {
       const selectedCommandName = interaction.values[0];
       const command = interaction.client.commands.get(selectedCommandName);
 
@@ -869,6 +1122,26 @@ client.on("interactionCreate", async (interaction) => {
           ephemeral: true,
         });
       }
+    } else if (customId.startsWith("txt2img_submit_")) {
+      const row = new ActionRowBuilder().addComponents(
+        buildTxt2imgTemplateSelect(`txt2img_template_${interaction.user.id}`)
+      );
+
+      const embed = new EmbedBuilder()
+        .setColor("#4CC9F0")
+        .setTitle("🖼️ Txt2Img Form")
+        .setDescription(
+          "Pilih template di menu bawah.\n" +
+          "Kalau mau manual, pilih **Custom (Isi Manual)** lalu isi prompt."
+        )
+        .setFooter({ text: `Hasil hanya terlihat oleh ${interaction.user.tag}` })
+        .setTimestamp();
+
+      await interaction.reply({
+        embeds: [embed],
+        components: [row],
+        ephemeral: true,
+      });
     } else if (customId.startsWith("confession_submit_")) {
       const { ModalBuilder, TextInputBuilder, TextInputStyle } = require("discord.js");
 
@@ -1136,7 +1409,41 @@ client.on("interactionCreate", async (interaction) => {
       }
     }
   } else if (interaction.isModalSubmit()) {
-    if (interaction.customId.startsWith("confession_modal_")) {
+    if (interaction.customId.startsWith("txt2img_modal_")) {
+      const ownerId = interaction.customId.replace("txt2img_modal_", "");
+      if (ownerId && ownerId !== interaction.user.id) {
+        return interaction.reply({
+          content: "Form ini bukan milik kamu.",
+          ephemeral: true,
+        });
+      }
+
+      const prompt = interaction.fields.getTextInputValue("txt2img_prompt");
+      await interaction.deferReply({ ephemeral: true });
+
+      try {
+        const generated = await generateTxt2ImgWithFallback(prompt);
+        const resultEmbed = new EmbedBuilder()
+          .setColor("#2DC653")
+          .setTitle("✅ Hasil Txt2Img (Custom)")
+          .setDescription(
+            `**Prompt:** ${prompt}\n` +
+            `**Provider:** ${generated.provider}` +
+            (generated.fallbackNote ? `\n**Catatan:** ${generated.fallbackNote}` : "")
+          )
+          .setImage(generated.imageUrl)
+          .setFooter({ text: `Only visible to ${interaction.user.tag}` })
+          .setTimestamp();
+
+        await interaction.editReply({
+          embeds: [resultEmbed],
+        });
+      } catch (error) {
+        await interaction.editReply({
+          content: `❌ Gagal generate gambar.\n${error?.message || "Unknown error"}`,
+        });
+      }
+    } else if (interaction.customId.startsWith("confession_modal_")) {
       const originalCustomId = interaction.customId.replace("confession_modal_", "");
       const parts = originalCustomId.split("_");
       const channelId = parts[2];

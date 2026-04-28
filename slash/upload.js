@@ -70,11 +70,11 @@ function buildPublicUrl(filename) {
 module.exports = {
   data: new SlashCommandBuilder()
     .setName("upload")
-    .setDescription("Upload image and get public link (private response)")
+    .setDescription("Upload gambar dan kirim link hasil ke DM")
     .addSubcommand((sub) =>
       sub
         .setName("kirim")
-        .setDescription("Upload gambar dan dapatkan link")
+        .setDescription("Upload gambar dan kirim link ke DM")
         .addAttachmentOption((opt) =>
           opt.setName("gambar").setDescription("File gambar").setRequired(true)
         )
@@ -126,9 +126,7 @@ module.exports = {
       const embed = new EmbedBuilder()
         .setColor("#00B4D8")
         .setTitle("Panduan Upload Gambar")
-        .setDescription(
-          "Semua hasil `/upload` dikirim secara private (only visible to you)."
-        )
+        .setDescription("Semua hasil upload dikirim ke DM user.")
         .addFields(
           {
             name: "1) Aktivasi Channel (Admin)",
@@ -149,7 +147,7 @@ module.exports = {
           {
             name: "Catatan",
             value:
-              `• Prefix \`${prefix}upload\` tetap ada untuk set/status/disable & fallback.\n` +
+              `• Prefix \`${prefix}upload\` akan kirim link ke DM dan hapus otomatis pesan upload.\n` +
               "• Link default: `https://akhfhid.discord/nama-file.ext` (bisa override via env `UPLOAD_BASE_URL`).\n" +
               "• Format: JPG, PNG, WEBP, GIF.",
           }
@@ -252,9 +250,14 @@ module.exports = {
       }
 
       const publicUrl = buildPublicUrl(fileName);
-      return interaction.editReply(
-        `✅ Upload berhasil.\nLink kamu:\n${publicUrl}\n\nPesan ini hanya terlihat oleh kamu.`
-      );
+      try {
+        await interaction.user.send(`✅ Upload berhasil.\nLink kamu:\n${publicUrl}`);
+      } catch (error) {
+        console.error("Failed to send upload result to DM:", error?.message || error);
+        return interaction.editReply("Upload berhasil, tapi aku gagal kirim DM. Coba buka DM kamu dulu lalu ulangi.");
+      }
+
+      return interaction.editReply("✅ Upload berhasil. Link sudah dikirim ke DM kamu.");
     }
   },
 };

@@ -87,6 +87,14 @@ function buildPublicUrl(filename) {
   return `${base}/${filename}`;
 }
 
+async function tryDeleteMessage(message) {
+  try {
+    await message.delete();
+  } catch (error) {
+    console.error("Failed to delete upload command message:", error?.message || error);
+  }
+}
+
 module.exports = {
   name: "upload",
   alias: ["imgupload", "up"],
@@ -146,28 +154,22 @@ module.exports = {
         `1. Set channel upload dengan \`${prefix}upload set #channel\` atau \`${prefix}upload set here\`.\n` +
         `2. Cek channel aktif dengan \`${prefix}upload status\`.\n` +
         `3. Jika ingin mematikan fitur, pakai \`${prefix}upload disable\`.\n\n` +
-        "**B. Cara Upload Normal (Link tampil di channel)**\n" +
+        "**B. Cara Upload (Link langsung ke DM)**\n" +
         `1. Masuk ke channel upload yang sudah diset.\n` +
         `2. Kirim gambar sebagai attachment + tulis command \`${prefix}upload\`.\n` +
         `3. Opsional nama file: \`${prefix}upload nama_file_kamu\`.\n` +
-        "4. Bot akan kirim link hasil upload di channel.\n\n" +
-        "**C. Cara Upload Private / DM**\n" +
-        `1. Kirim gambar sebagai attachment + command \`${prefix}upload private\`.\n` +
-        `2. Opsional nama file: \`${prefix}upload private nama_file_kamu\`.\n` +
-        "3. Bot kirim link hasil upload ke DM kamu.\n" +
-        "4. Kalau DM kamu tertutup, bot akan kasih peringatan di channel.\n\n" +
-        "**D. Format & Penamaan File**\n" +
+        "4. Bot kirim link hasil upload ke DM kamu.\n" +
+        "5. Pesan command upload kamu di channel akan dihapus otomatis.\n\n" +
+        "**C. Format & Penamaan File**\n" +
         "• Format didukung: JPG, PNG, WEBP, GIF.\n" +
         "• Nama file otomatis disanitasi (huruf kecil, simbol aneh dibersihkan).\n" +
         "• Bot menambahkan suffix unik agar nama tidak tabrakan.\n\n" +
-        "**E. Contoh Pemakaian**\n" +
+        "**D. Contoh Pemakaian**\n" +
         `• \`${prefix}upload set #media-upload\`\n` +
         `• \`${prefix}upload status\`\n` +
         `• \`${prefix}upload\` (dengan attachment)\n` +
-        `• \`${prefix}upload cover-event\` (dengan attachment)\n` +
-        `• \`${prefix}upload private\` (dengan attachment)\n` +
-        `• \`${prefix}upload private banner-komunitas\` (dengan attachment)\n\n` +
-        "**F. Troubleshooting**\n" +
+        `• \`${prefix}upload cover-event\` (dengan attachment)\n\n` +
+        "**E. Troubleshooting**\n" +
         "• Error \"fitur belum aktif\": admin belum set channel upload.\n" +
         "• Error \"hanya bisa dipakai di #channel\": kamu jalankan command di channel lain.\n" +
         "• Error format file: pastikan attachment adalah gambar.\n" +
@@ -204,8 +206,7 @@ module.exports = {
 
     ensureUploadDir();
 
-    const isPrivateMode = sub === "private";
-    const requestedNameRaw = (isPrivateMode ? args.slice(1) : args).join(" ").trim();
+    const requestedNameRaw = args.join(" ").trim();
     const baseName = sanitizeBaseName(
       requestedNameRaw || path.parse(attachment.name || "image").name
     );
@@ -226,22 +227,25 @@ module.exports = {
 
     const publicUrl = buildPublicUrl(fileName);
 
-    if (isPrivateMode) {
-      try {
-        await message.author.send(
-          `✅ Upload berhasil (Private Mode).\nLink kamu:\n${publicUrl}`
-        );
-        await message.reply("✅ Link upload sudah dikirim ke DM kamu.");
-      } catch (error) {
-        console.error("Failed to send upload result to DM:", error?.message || error);
-        await message.reply("Aku nggak bisa kirim DM. Buka DM kamu dulu lalu coba lagi.");
-      }
+    try {
+      await message.author.send(
+        `✅ Upload berhasil.\nLink kamu:\n${publicUrl}`
+      );
+    } catch (error) {
+      console.error("Failed to send upload result to DM:", error?.message || error);
+      await message.reply("Aku nggak bisa kirim DM. Buka DM kamu dulu lalu coba lagi.");
+      await tryDeleteMessage(message);
       return;
     }
 
-    await message.reply(
-      `${message.author.toString()} ✅ Upload berhasil.\nLink kamu: ${publicUrl}`
+    const notice = await message.channel.send(
+      `${message.author.toString()} ✅ Link upload sudah dikirim ke DM kamu.`
     );
+    setTimeout(() => {
+      notice.delete().catch(() => { });
+    }, 6000);
+
+    await tryDeleteMessage(message);
 
   },
 };
