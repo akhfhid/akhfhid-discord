@@ -25,8 +25,8 @@ module.exports = {
             const dayName = dayNames[now.getDay()];
             const dateStr = now.toLocaleDateString("id-ID");
 
-            const systemPrompt = `Kamu adalah asisten AI yang ramah dan memotivasi. Buatkan pesan pagi yang singkat (maksimal 3-4 kalimat), positif, dan senatural mungkin dalam bahasa Indonesia. Jangan gunakan emoji berlebihan. Sesuaikan pesan dengan hari (weekend/weekday) atau kalender, misalnya beri semangat santai jika hari libur atau semangat produktif jika hari kerja. Jadikan nama server sebagai acuan topik obrolan di server tersebut.`;
-            const text = `Buatkan pesan motivasi pagi untuk server Discord "${message.guild.name}" di hari ${dayName}, ${dateStr}. Sesuaikan konteks pesan dengan nama server ("${message.guild.name}") yang mungkin memberikan petunjuk tentang topik/game/hobi apa yang sering dibahas di sana. Perhatikan juga harinya (misalnya hari libur/weekend atau hari kerja biasa).`;
+            const systemPrompt = `Kamu adalah asisten AI yang ramah dan memotivasi. Buatkan pesan pagi yang natural dalam bahasa Indonesia (maksimal 4-5 kalimat). Jangan gunakan emoji berlebihan. Panduan isi pesan: 1. Sesuaikan dengan hari (weekend/weekday). 2. Jadikan nama server sebagai topik obrolan. 3. Beri pengingat santai soal cuaca (misal: karena akhir-akhir ini sering hujan, ingatkan sedia payung/jas hujan atau saran dengerin lagu/main game seharian). 4. SELALU sertakan satu kutipan filosofi kehidupan beserta nama tokohnya (misal: Socrates, Plato, dll).`;
+            const text = `Buatkan pesan pagi untuk server Discord "${message.guild.name}" di hari ${dayName}, ${dateStr}. Ingat panduan: sesuaikan dengan nama server ("${message.guild.name}"), tambahkan obrolan cuaca hujan, dan wajib sertakan kutipan filosofi tokoh terkenal.`;
 
             const response = await generateText(text, systemPrompt, "schedule-daily-message");
 
