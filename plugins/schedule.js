@@ -49,7 +49,7 @@ module.exports = {
                 .addFields(
                     { name: 'Status', value: status ? '✅ Aktif' : '❌ Nonaktif', inline: true },
                     { name: 'Channel', value: channel ? channel.toString() : 'Tidak diatur', inline: true },
-                    { name: 'Waktu', value: '07:30 Pagi', inline: true }
+                    { name: 'Waktu', value: '06:30 Pagi', inline: true }
                 )
                 .setFooter({ text: 'Pesan akan bervariasi setiap hari menggunakan AI' })
                 .setTimestamp();
@@ -101,7 +101,7 @@ module.exports = {
                 .addFields(
                     { name: 'Status', value: schedule.enabled ? '✅ Aktif' : '❌ Nonaktif', inline: true },
                     { name: 'Channel', value: channel ? channel.toString() : 'Tidak diatur', inline: true },
-                    { name: 'Waktu', value: '07:30 Pagi', inline: true }
+                    { name: 'Waktu', value: '06:30 Pagi', inline: true }
                 )
                 .setFooter({ text: 'Pesan akan bervariasi setiap hari menggunakan AI' })
                 .setTimestamp();
