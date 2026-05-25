@@ -1698,9 +1698,9 @@ if (fs.existsSync(configPath)) {
 }
 async function generateDailyMessage(guildName, dayName, dateStr) {
   try {
-    const systemPrompt = `Kamu adalah asisten AI yang ramah dan memotivasi. Buatkan pesan pagi yang singkat, positif, dan memotivasi dalam bahasa Indonesia. Maksimal 3-4 kalimat saja. Jangan gunakan emoji berlebihan.`;
+    const systemPrompt = `Kamu adalah asisten AI yang ramah dan memotivasi. Buatkan pesan pagi yang singkat (maksimal 3-4 kalimat), positif, dan senatural mungkin dalam bahasa Indonesia. Jangan gunakan emoji berlebihan. Sesuaikan pesan dengan hari (weekend/weekday) atau kalender, misalnya beri semangat santai jika hari libur atau semangat produktif jika hari kerja. Jadikan nama server sebagai acuan topik obrolan di server tersebut.`;
 
-    const text = `Buatkan pesan motivasi pagi untuk server Discord "${guildName}" di hari ${dayName}, ${dateStr}.`;
+    const text = `Buatkan pesan motivasi pagi untuk server Discord "${guildName}" di hari ${dayName}, ${dateStr}. Sesuaikan konteks pesan dengan nama server ("${guildName}") yang mungkin memberikan petunjuk tentang topik/game/hobi apa yang sering dibahas di sana. Perhatikan juga harinya (misalnya hari libur/weekend atau hari kerja biasa).`;
 
     const response = await generateText(text, systemPrompt, "schedule-daily-message");
 
@@ -1745,7 +1745,7 @@ async function sendScheduledMessage() {
     const gptMessage = await generateDailyMessage(guild.name, dayName, dateStr);
 
     const messageTemplate = gptMessage
-      ? `🌅 **Pesan Pagi Harian**\nSelamat pagi warga ${guild.name}! ☀️\nHari ${dayName}, ${dateStr}\n\n${gptMessage}\n\n_Dikirim otomatis setiap pukul 07:30 WIB_`
+      ? `🌅 **Pesan Pagi Harian**\nSelamat pagi warga ${guild.name}! ☀️\nHari ${dayName}, ${dateStr}\n\n${gptMessage}\n\n_Dikirim otomatis setiap pukul 06:30 WIB_`
       : `🌅 **Pesan Pagi Harian**\nSelamat pagi warga ${guild.name}! ☀️\nHari ${dayName}, ${dateStr} pukul ${timeStr}.\n\nSemoga hari ini penuh berkah dan produktif. Jangan lupa bahagia dan tetap semangat! 🎉`;
 
     try {
@@ -1759,13 +1759,13 @@ async function sendScheduledMessage() {
   }
 }
 
-const scheduledJob = cron.schedule("0 30 7 * * *", sendScheduledMessage, {
+const scheduledJob = cron.schedule("0 30 6 * * *", sendScheduledMessage, {
   scheduled: true,
   timezone: "Asia/Jakarta",
 });
 
 scheduledJob.start();
-console.log(" Cron job untuk pesan harian (07:30) telah diaktifkan");
+console.log(" Cron job untuk pesan harian (06:30) telah diaktifkan");
 app.set("view engine", "ejs");
 app.set("views", path.join(__dirname, "views"));
 app.use(express.static("public"));
