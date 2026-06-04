@@ -19,35 +19,74 @@ module.exports = {
             const winner = result.winnerId === message.author.id ? message.author : opponent;
             const loser = result.winnerId === message.author.id ? opponent : message.author;
             
-            // Generate dialog AI
-            const dialogPrompt = `Kamu adalah commentator pertarungan kartu anime. Buatlah narasi dialog singkat (3-4 kalimat) untuk menjelaskan hasil battle. 
-Kartu ${message.author.username}: ${result.left.instance.name} (${result.left.instance.anime}) Power: ${result.leftScore} vs Kartu ${opponent.username}: ${result.right.instance.name} (${result.right.instance.anime}) Power: ${result.rightScore}
-${winner.username} menang. Jelaskan secara dramatis dan seru kenapa ${winner.username} menang dengan dialog percakapan singkat. Gunakan bahasa Indonesia casual.`;
+            // Build detailed battle narrative prompt
+            const winnerCardInfo = result.winnerCard.instance;
+            const loserCardInfo = result.loserCard.instance;
+            const factors = result.battleFactors;
             
-            let dialogText = "";
+            const narrativePrompt = `Kamu adalah naratornya pertarungan anime kartu yang sangat SERU dan DRAMATIC! Buatlah cerita pertarungan yang PANJANG (minimal 6-8 kalimat) dan DETAIL tentang duel kartu anime ini.
+
+DETAIL PERTARUNGAN:
+⭐ PEMENANG: ${message.author.username} 
+- Kartu: ${result.left.instance.name} (${result.left.instance.anime})
+- Element: ${result.left.instance.element}
+- Rarity: ${result.left.instance.rarity.toUpperCase()}
+- Level: ${result.left.instance.level} | Evo: ${result.left.instance.evo}
+- Power: ${result.leftScore}
+
+📍 YANG KALAH: ${opponent.username}
+- Kartu: ${result.right.instance.name} (${result.right.instance.anime})
+- Element: ${result.right.instance.element}
+- Rarity: ${result.right.instance.rarity.toUpperCase()}
+- Level: ${result.right.instance.level} | Evo: ${result.right.instance.evo}
+- Power: ${result.rightScore}
+
+JANGAN HANYA FOKUS KE POWER! Jelaskan:
+1. Bagaimana pertarungan dimulai dengan deskripsi dramatis
+2. Tactic atau skill apa yang digunakan pemenang
+3. Kelemahan atau kesalahan yang dilakukan yang kalah
+4. Penjelasan rarity/level/evo/element yang mempengaruhi hasil
+5. Momen climax yang sangat seru
+6. Hasil akhir yang memukau
+
+Tulis dengan bahasa Indonesia yang casual tapi dramatis seperti komentar anime! Make it EPIC!`;
+            
+            let narrativeText = "";
             try {
                 const response = await groq.chat({
-                    messages: [{ role: "user", content: dialogPrompt }],
+                    messages: [{ role: "user", content: narrativePrompt }],
                     model: "groq/compound-mini",
                 });
-                dialogText = response?.message || "";
+                narrativeText = response?.message || "";
             } catch (error) {
-                console.error("AI Dialog Error:", error?.message);
-                dialogText = `${winner} berhasil mengalahkan ${loser}!`;
+                console.error("AI Narrative Error:", error?.message);
+                narrativeText = `Setelah pertarungan yang sengit, ${winner.username} berhasil memenangkan duel! ${result.left.instance.name} mengungguli ${result.right.instance.name} dengan power ${result.leftScore} vs ${result.rightScore}. Ini adalah pertarungan yang penuh drama dan kejutan!`;
             }
             
-            const embed = baseEmbed("⚔️ Card Battle Result", message.author.tag)
+            const embed = baseEmbed("⚔️ CARD BATTLE RUMBLE ⚔️", message.author.tag)
                 .setDescription(
-                    `**${message.author.username}** vs **${opponent.username}**\n\n` +
-                    `${formatCard(result.left.instance)}\n**Power:** ${result.leftScore.toLocaleString("id-ID")}\n\n` +
-                    `vs\n\n` +
-                    `${formatCard(result.right.instance)}\n**Power:** ${result.rightScore.toLocaleString("id-ID")}\n\n` +
-                    `━━━━━━━━━━━━━━━━\n` +
-                    `**🏆 Pemenang: ${winner}**\n\n` +
-                    `📖 **Narasi:**\n${dialogText}\n\n` +
-                    `💰 **Reward:** +300 gold, +20 material`
+                    `**${message.author.username}** ⚡ vs ⚡ **${opponent.username}**\n\n` +
+                    `**${result.left.instance.name}** [${result.left.instance.anime}]\n` +
+                    `Rarity: ${result.left.instance.rarity} | Level: ${result.left.instance.level} | Evo: ${result.left.instance.evo}\n` +
+                    `Element: ${result.left.instance.element} | Power: ${result.leftScore}\n\n` +
+                    `═══════════════════════\n\n` +
+                    `**${result.right.instance.name}** [${result.right.instance.anime}]\n` +
+                    `Rarity: ${result.right.instance.rarity} | Level: ${result.right.instance.level} | Evo: ${result.right.instance.evo}\n` +
+                    `Element: ${result.right.instance.element} | Power: ${result.rightScore}\n\n`
                 )
-                .setColor(winner.id === message.author.id ? "#00FF00" : "#FF0000");
+                .addFields({
+                    name: "🏆 PEMENANG",
+                    value: `👑 **${winner.username}** menang dengan score ${result.leftScore > result.rightScore ? result.leftScore : result.rightScore}`
+                })
+                .addFields({
+                    name: "📖 NARASI PERTARUNGAN",
+                    value: narrativeText.slice(0, 1024) // Discord field limit
+                })
+                .addFields({
+                    name: "💰 REWARD",
+                    value: `**+300 gold** | **+20 material**`
+                })
+                .setColor(winner.id === message.author.id ? "#FFD700" : "#C0C0C0");
             
             return message.reply({ embeds: [embed] });
         } catch (error) {

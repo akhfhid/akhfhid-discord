@@ -259,9 +259,28 @@ class CardGame {
             this.strongestCard(guildId, attackerId),
             this.strongestCard(guildId, defenderId),
         ]);
-        const leftScore = left.stats.power * (0.9 + random() * 0.2);
-        const rightScore = right.stats.power * (0.9 + random() * 0.2);
+        
+        // Battle logic dengan multiple factors
+        const rarityScore = { "base": 1, "common": 1.2, "uncommon": 1.5, "rare": 2, "super_rare": 2.5, "ultra_rare": 3 };
+        const leftRarityMult = rarityScore[left.instance.rarity] || 1;
+        const rightRarityMult = rarityScore[right.instance.rarity] || 1;
+        
+        // Factor yang mempengaruhi: power, level, evo, rarity, plus randomness
+        const leftPowerFactor = left.stats.power * leftRarityMult * (1 + left.instance.level / 100) * (1 + left.instance.evo * 0.15);
+        const rightPowerFactor = right.stats.power * rightRarityMult * (1 + right.instance.level / 100) * (1 + right.instance.evo * 0.15);
+        
+        // Element advantage (simple system)
+        const leftElementBoost = random() > 0.6 ? 1.2 : 1; // 40% chance boost
+        const rightElementBoost = random() > 0.6 ? 1.2 : 1;
+        
+        // Final scores dengan randomness
+        const leftScore = leftPowerFactor * leftElementBoost * (0.85 + random() * 0.3);
+        const rightScore = rightPowerFactor * rightElementBoost * (0.85 + random() * 0.3);
+        
         const winnerId = leftScore >= rightScore ? attackerId : defenderId;
+        const winnerCard = leftScore >= rightScore ? left : right;
+        const loserCard = leftScore >= rightScore ? right : left;
+        
         const loserId = winnerId === attackerId ? defenderId : attackerId;
         const winner = this.getPlayer(guildId, winnerId);
         const loser = this.getPlayer(guildId, loserId);
@@ -271,7 +290,26 @@ class CardGame {
         loser.losses++;
         attacker.battleAt = now;
         this._save();
-        return { winnerId, left, right, leftScore: Math.round(leftScore), rightScore: Math.round(rightScore) };
+        
+        return { 
+            winnerId, 
+            left, 
+            right, 
+            leftScore: Math.round(leftScore), 
+            rightScore: Math.round(rightScore),
+            winnerCard,
+            loserCard,
+            battleFactors: {
+                winnerRarity: winnerCard.instance.rarity,
+                winnerLevel: winnerCard.instance.level,
+                winnerEvo: winnerCard.instance.evo,
+                winnerElement: winnerCard.instance.element,
+                loserRarity: loserCard.instance.rarity,
+                loserLevel: loserCard.instance.level,
+                loserEvo: loserCard.instance.evo,
+                loserElement: loserCard.instance.element
+            }
+        };
     }
 
     async startRaid(guildId, now = Date.now(), force = false) {

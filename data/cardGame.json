@@ -321,15 +321,15 @@
             }
           ],
           "dailyAt": 1780562220219,
-          "battleAt": 1780573440451,
+          "battleAt": 1780586676248,
           "raidAt": 1780579351347,
           "wins": 1,
-          "losses": 1
+          "losses": 2
         },
         "1257265202806788096": {
-          "gold": 5119,
+          "gold": 5419,
           "tickets": 0,
-          "materials": 1062,
+          "materials": 1082,
           "cards": [
             {
               "instanceId": "e3c2bce2",
@@ -725,7 +725,7 @@
           "dailyAt": 1780566874556,
           "battleAt": 1780577292051,
           "raidAt": 1780579358025,
-          "wins": 6,
+          "wins": 7,
           "losses": 0
         },
         "761782119302561832": {
