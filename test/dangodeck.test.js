@@ -104,12 +104,19 @@ function createGame() {
     return new CardGame({ dataPath, api });
 }
 
-test("card game requires its configured channel", () => {
+test("card game supports multiple configured channels", () => {
     const game = createGame();
     assert.throws(() => game.requireActiveChannel("guild", "channel"), CardGameError);
-    game.setChannel("guild", "card-channel");
-    assert.doesNotThrow(() => game.requireActiveChannel("guild", "card-channel"));
+    game.getGuild("guild").channelId = "legacy-channel";
+    game.setChannel("guild", "first-channel");
+    game.setChannel("guild", "second-channel");
+    assert.deepEqual(game.getChannelIds("guild"), ["legacy-channel", "first-channel", "second-channel"]);
+    assert.doesNotThrow(() => game.requireActiveChannel("guild", "legacy-channel"));
+    assert.doesNotThrow(() => game.requireActiveChannel("guild", "first-channel"));
+    assert.doesNotThrow(() => game.requireActiveChannel("guild", "second-channel"));
     assert.throws(() => game.requireActiveChannel("guild", "other-channel"), CardGameError);
+    game.disableChannel("guild", "first-channel");
+    assert.deepEqual(game.getChannelIds("guild"), ["legacy-channel", "second-channel"]);
 });
 
 test("gacha stores a unique card and consumes a ticket", async () => {
@@ -141,6 +148,9 @@ test("daily, progression, battle, raid, and market persist game state", async ()
 
     const raid = await game.raid("guild", "first", 3_000_000_000, () => 0.5);
     assert.equal(raid.damage, 500);
+    const scheduledRaid = await game.startRaid("guild", 4_000_000_000, true);
+    assert.equal(scheduledRaid.hp, 50000);
+    assert.deepEqual(scheduledRaid.contributors, {});
 
     const listing = game.sell("guild", "first", first.cards[0].instanceId, 500);
     second.gold = 1000;

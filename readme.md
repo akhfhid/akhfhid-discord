@@ -48,14 +48,15 @@ A robust, modular, and feature-rich Discord bot built with **Node.js** and **Dis
 
 ## Dangodeck Card Integration
 
-Card data is provided by the Dangodeck API. An admin must activate one card-game
-channel before any card command can be used:
+Card data is provided by the Dangodeck API. An admin must activate at least one
+card-game channel before any card command can be used. Running `!cardgame set`
+again adds another active channel without disabling the previous one:
 
 ```text
 !cardgame set #card-game
 !cardgame status
 !cardgame panel
-!cardgame disable
+!cardgame disable [#channel|all]
 
 !gacha
 !inventory
@@ -80,6 +81,9 @@ Every player starts with 1,000 gold, 5 gacha tickets, and 100 materials. Gacha
 cards are saved permanently per server in `data/cardGame.json`. Upgrade,
 evolution, ascension, PvP battle, cooperative raid, daily rewards, and the
 server marketplace all use this saved inventory.
+
+A fresh cooperative raid boss starts automatically every day at 20:00 Jakarta
+time and is announced in every active card-game channel.
 
 After `!cardgame set #card-game` succeeds, the bot automatically posts a
 complete command tutorial in the selected channel. Admins can post it again

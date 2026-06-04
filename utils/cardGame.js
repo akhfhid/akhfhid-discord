@@ -6,7 +6,7 @@ const { dangodeck, calculatePower } = require("./dangodeck");
 const DEFAULT_DATA_PATH = path.join(__dirname, "..", "data", "cardGame.json");
 const DAILY_COOLDOWN_MS = 24 * 60 * 60 * 1000;
 const BATTLE_COOLDOWN_MS = 5 * 60 * 1000;
-const RAID_COOLDOWN_MS = 60 * 1000;
+const RAID_COOLDOWN_MS = 15 * 1000;
 const RARITIES = ["base", "common", "uncommon", "rare", "super_rare", "ultra_rare"];
 const RARITY_RANK = Object.fromEntries(RARITIES.map((rarity, index) => [rarity, index]));
 
@@ -44,32 +44,51 @@ class CardGame {
 
     getGuild(guildId, create = true) {
         if (!this.data.guilds[guildId] && create) {
-            this.data.guilds[guildId] = { channelId: null, players: {}, market: [], raid: null };
+            this.data.guilds[guildId] = { channelIds: [], players: {}, market: [], raid: null };
         }
         return this.data.guilds[guildId];
     }
 
     setChannel(guildId, channelId) {
-        this.getGuild(guildId).channelId = channelId;
+        const guild = this.getGuild(guildId);
+        guild.channelIds = this.getChannelIds(guildId);
+        if (!guild.channelIds.includes(channelId)) guild.channelIds.push(channelId);
+        delete guild.channelId;
         this._save();
     }
 
-    disableChannel(guildId) {
-        this.getGuild(guildId).channelId = null;
+    disableChannel(guildId, channelId = null) {
+        const guild = this.getGuild(guildId);
+        guild.channelIds = channelId
+            ? this.getChannelIds(guildId).filter((id) => id !== channelId)
+            : [];
+        delete guild.channelId;
         this._save();
+    }
+
+    getChannelIds(guildId) {
+        const guild = this.getGuild(guildId, false);
+        if (!guild) return [];
+        const channelIds = Array.isArray(guild.channelIds) ? [...guild.channelIds] : [];
+        if (guild.channelId) channelIds.push(guild.channelId);
+        return [...new Set(channelIds.filter(Boolean))];
+    }
+
+    getGuildIds() {
+        return Object.keys(this.data.guilds);
     }
 
     getChannelId(guildId) {
-        return this.getGuild(guildId, false)?.channelId || null;
+        return this.getChannelIds(guildId)[0] || null;
     }
 
     requireActiveChannel(guildId, channelId) {
-        const activeChannelId = this.getChannelId(guildId);
-        if (!activeChannelId) {
+        const activeChannelIds = this.getChannelIds(guildId);
+        if (!activeChannelIds.length) {
             throw new CardGameError("Card game belum diaktifkan oleh admin di server ini.");
         }
-        if (activeChannelId !== channelId) {
-            throw new CardGameError(`Card game hanya bisa dipakai di <#${activeChannelId}>.`);
+        if (!activeChannelIds.includes(channelId)) {
+            throw new CardGameError(`Card game hanya bisa dipakai di ${activeChannelIds.map((id) => `<#${id}>`).join(", ")}.`);
         }
     }
 
@@ -110,6 +129,31 @@ class CardGame {
             obtainedAt: Date.now(),
         };
         player.tickets--;
+        player.cards.push(instance);
+        this._save();
+        return instance;
+    }
+
+    gachaWithGold(guildId, userId, apiCard) {
+        const GACHA_GOLD_COST = 200;
+        const player = this.getPlayer(guildId, userId);
+        if (player.gold < GACHA_GOLD_COST) {
+            throw new CardGameError(`Gold tidak cukup. Butuh ${GACHA_GOLD_COST} gold untuk gacha, kamu hanya punya ${player.gold} gold.`);
+        }
+        const instance = {
+            instanceId: crypto.randomUUID().split("-")[0],
+            cardId: apiCard.id,
+            name: apiCard.name,
+            anime: apiCard.anime,
+            element: apiCard.element,
+            image: apiCard.image,
+            rarity: apiCard.params?.rarity || "base",
+            level: apiCard.params?.level || 1,
+            evo: apiCard.params?.evo || 1,
+            ascension: apiCard.params?.ascension || 0,
+            obtainedAt: Date.now(),
+        };
+        player.gold -= GACHA_GOLD_COST;
         player.cards.push(instance);
         this._save();
         return instance;
@@ -230,26 +274,60 @@ class CardGame {
         return { winnerId, left, right, leftScore: Math.round(leftScore), rightScore: Math.round(rightScore) };
     }
 
+    async startRaid(guildId, now = Date.now(), force = false) {
+        const guild = this.getGuild(guildId);
+        if (!force && guild.raid && guild.raid.hp > 0 && now - guild.raid.createdAt <= DAILY_COOLDOWN_MS) {
+            return guild.raid;
+        }
+
+        const bossCard = await this.api.getRandomCard();
+        const difficultyRoll = Math.random();
+        let difficulty, maxHp;
+        
+        // Difficulty berdasarkan random: Easy (50%), Normal (35%), Hard (15%)
+        if (difficultyRoll < 0.5) {
+            difficulty = "Easy";
+            maxHp = 30000;
+        } else if (difficultyRoll < 0.85) {
+            difficulty = "Normal";
+            maxHp = 50000;
+        } else {
+            difficulty = "Hard";
+            maxHp = 75000;
+        }
+        
+        guild.raid = {
+            cardId: bossCard.id,
+            name: bossCard.name,
+            image: bossCard.image,
+            element: bossCard.element,
+            difficulty: difficulty,
+            maxHp: maxHp,
+            hp: maxHp,
+            createdAt: now,
+            contributors: {},
+        };
+        this._save();
+        return guild.raid;
+    }
+
     async raid(guildId, userId, now = Date.now(), random = Math.random) {
         const guild = this.getGuild(guildId);
         const player = this.getPlayer(guildId, userId);
+        
+        // Cek apakah jam sekarang adalah jam 8 malam (event raid)
+        const currentHour = new Date(now).getHours();
+        if (currentHour !== 20) {
+            const nextRaidHour = currentHour < 20 ? 20 : 20 + 24;
+            const hoursUntilRaid = (nextRaidHour - currentHour) % 24;
+            throw new CardGameError(`⏰ Event raid hanya tersedia jam 8 malam. Coba lagi dalam ${hoursUntilRaid} jam.`);
+        }
+        
         const remaining = RAID_COOLDOWN_MS - (now - player.raidAt);
         if (player.raidAt && remaining > 0) throw new CardGameError(`Raid attack cooldown ${formatDuration(remaining)}.`);
         if (!player.cards.length) throw new CardGameError("Inventory kartu masih kosong.");
 
-        if (!guild.raid || guild.raid.hp <= 0 || now - guild.raid.createdAt > DAILY_COOLDOWN_MS) {
-            const bossCard = await this.api.getRandomCard();
-            guild.raid = {
-                cardId: bossCard.id,
-                name: bossCard.name,
-                image: bossCard.image,
-                element: bossCard.element,
-                maxHp: 50000,
-                hp: 50000,
-                createdAt: now,
-                contributors: {},
-            };
-        }
+        await this.startRaid(guildId, now);
 
         const strongest = await this.strongestCard(guildId, userId);
         const damage = Math.max(1, Math.round(strongest.stats.power * (0.8 + random() * 0.4)));
@@ -260,12 +338,18 @@ class CardGame {
         let rewards = null;
         if (guild.raid.hp === 0) {
             rewards = {};
+            const difficultyMultiplier = guild.raid.difficulty === "Easy" ? 0.8 : guild.raid.difficulty === "Hard" ? 1.5 : 1;
+            
             for (const [contributorId, contribution] of Object.entries(guild.raid.contributors)) {
                 const contributor = this.getPlayer(guildId, contributorId);
                 const share = contribution / guild.raid.maxHp;
+                
+                const baseGold = Math.max(250, Math.round(5000 * share * difficultyMultiplier));
+                const baseMaterial = Math.max(25, Math.round(500 * share * difficultyMultiplier));
+                
                 const reward = {
-                    gold: Math.max(250, Math.round(5000 * share)),
-                    materials: Math.max(25, Math.round(500 * share)),
+                    gold: Math.round(baseGold),
+                    materials: Math.round(baseMaterial),
                     tickets: share >= 0.1 ? 1 : 0,
                 };
                 contributor.gold += reward.gold;

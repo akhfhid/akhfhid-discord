@@ -122,13 +122,25 @@ module.exports = {
 
             if (["random", "gacha", "pull"].includes(action)) {
                 const player = cardGame.getPlayer(message.guild.id, message.author.id);
-                if (player.tickets < 1) throw new CardGameError("Ticket gacha habis. Ambil `!daily` terlebih dahulu.");
                 const card = await dangodeck.getRandomCard();
-                const instance = cardGame.addCard(message.guild.id, message.author.id, card);
-                const embed = cardEmbed(card, message.author.tag, "Gacha Pull")
+                let instance, isFree;
+                
+                // Cek apakah pemain punya ticket gratis
+                if (player.tickets > 0) {
+                    instance = cardGame.addCard(message.guild.id, message.author.id, card);
+                    isFree = true;
+                } else {
+                    // Gacha dengan gold (200 gold)
+                    instance = cardGame.gachaWithGold(message.guild.id, message.author.id, card);
+                    isFree = false;
+                }
+                
+                const updatedPlayer = cardGame.getPlayer(message.guild.id, message.author.id);
+                const embed = cardEmbed(card, message.author.tag, isFree ? "🎟️ Gacha Gratis" : "💰 Gacha Premium (200 Gold)")
                     .addFields(
                         { name: "Inventory ID", value: `\`${instance.instanceId}\``, inline: true },
-                        ...economyFields(player)
+                        { name: "Jenis", value: isFree ? "Ticket Gratis (1x/hari)" : "Premium (200 Gold)", inline: true },
+                        ...economyFields(updatedPlayer)
                     );
                 return message.reply({ embeds: [embed] });
             }
@@ -154,7 +166,58 @@ module.exports = {
 
             if (["list", "browse"].includes(action)) {
                 const result = await dangodeck.listCards(parseKeyValues(args));
-                return message.reply({ embeds: [cardsListEmbed(result, message.author.tag)] });
+                const cards = result.items || result;
+                
+                if (!cards.length) {
+                    return message.reply({ embeds: [cardsListEmbed(result, message.author.tag)] });
+                }
+                
+                const itemsPerPage = 10;
+                const pages = Math.ceil(cards.length / itemsPerPage);
+                let currentPage = 1;
+                
+                const generateEmbed = (page) => {
+                    const start = (page - 1) * itemsPerPage;
+                    const end = start + itemsPerPage;
+                    const pageCards = cards.slice(start, end);
+                    
+                    const fields = pageCards.map((card) => ({
+                        name: `#${card.id} - ${card.name}`,
+                        value: `**Anime:** ${card.anime || "-"}\n**Element:** ${card.element || "-"}\n**Rarity:** ${card.rarity || "-"}`,
+                        inline: true
+                    }));
+                    
+                    const embed = new (require("discord.js")).EmbedBuilder()
+                        .setColor(7419530)
+                        .setTitle("🎴 Dangodeck Card List")
+                        .setDescription(`Total: **${cards.length}** cards\n📄 Halaman ${page} dari ${pages}`)
+                        .addFields(...fields)
+                        .setFooter({ text: `Requested by ${message.author.tag} | Powered by Dangodeck` })
+                        .setTimestamp();
+                    
+                    return embed;
+                };
+                
+                const reply = await message.reply({ embeds: [generateEmbed(currentPage)] });
+                
+                if (pages > 1) {
+                    await reply.react("⬅️");
+                    await reply.react("➡️");
+                    
+                    const filter = (reaction, user) => ["⬅️", "➡️"].includes(reaction.emoji.name) && user.id === message.author.id;
+                    const collector = reply.createReactionCollector({ filter, time: 300000 });
+                    
+                    collector.on("collect", async (reaction) => {
+                        if (reaction.emoji.name === "➡️" && currentPage < pages) {
+                            currentPage++;
+                        } else if (reaction.emoji.name === "⬅️" && currentPage > 1) {
+                            currentPage--;
+                        }
+                        await reply.edit({ embeds: [generateEmbed(currentPage)] });
+                        try { await reaction.users.remove(message.author.id); } catch (e) {}
+                    });
+                }
+                return;
             }
 
             return message.reply(`Subcommand tidak dikenal.\n\n${usage(prefix)}`);

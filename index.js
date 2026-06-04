@@ -19,6 +19,7 @@ const axios = require("axios");
 const cheerio = require("cheerio");
 const fs = require("fs");
 const cron = require("node-cron");
+const { cardGame } = require("./utils/cardGame");
 const deepimg = require("./utils/deepimg");
 const nanobanana = require("./utils/nanobanana");
 const { TXT2IMG_TEMPLATES } = require("./utils/txt2imgTemplates");
@@ -1766,6 +1767,97 @@ const scheduledJob = cron.schedule("0 30 6 * * *", sendScheduledMessage, {
 
 scheduledJob.start();
 console.log(" Cron job untuk pesan harian (06:30) telah diaktifkan");
+
+async function startDailyCardGameRaids() {
+  console.log(`[${new Date().toLocaleString()}] Memulai raid harian Dangodeck...`);
+
+  for (const guildId of cardGame.getGuildIds()) {
+    const channelIds = cardGame.getChannelIds(guildId);
+    if (!channelIds.length) continue;
+
+    const guild = client.guilds.cache.get(guildId);
+    if (!guild) continue;
+
+    try {
+      const boss = await cardGame.startRaid(guildId, Date.now(), true);
+      const embed = new EmbedBuilder()
+        .setColor("#E67E22")
+        .setTitle(`Raid Harian Dimulai: ${boss.name}`)
+        .setDescription(
+          `Boss raid baru telah muncul dengan **${boss.maxHp.toLocaleString("id-ID")} HP**.\n` +
+          `Gunakan \`${process.env.PREFIX || "!"}raid\` untuk menyerang bersama pemain lain.\n\n` +
+          "_Boss baru muncul setiap hari pukul 20.00 WIB._"
+        )
+        .setFooter({ text: "Dangodeck Card Game" })
+        .setTimestamp();
+      if (boss.image) embed.setImage(boss.image);
+
+      for (const channelId of channelIds) {
+        const channel = guild.channels.cache.get(channelId);
+        if (!channel?.isTextBased() || !channel.send) continue;
+        try {
+          await channel.send({ embeds: [embed] });
+        } catch (error) {
+          console.error(`Gagal mengumumkan raid harian di channel ${channelId}:`, getErrorMessage(error));
+        }
+      }
+    } catch (error) {
+      console.error(`Gagal memulai raid harian di server ${guild.name}:`, getErrorMessage(error));
+    }
+  }
+}
+
+async function sendRaidNotification() {
+  console.log(`[${new Date().toLocaleString()}] Mengirim notifikasi raid dalam 30 menit...`);
+
+  for (const guildId of cardGame.getGuildIds()) {
+    const channelIds = cardGame.getChannelIds(guildId);
+    if (!channelIds.length) continue;
+
+    const guild = client.guilds.cache.get(guildId);
+    if (!guild) continue;
+
+    try {
+      const embed = new EmbedBuilder()
+        .setColor("#FF6B6B")
+        .setTitle("⏰ Event Raid Dimulai dalam 30 Menit!")
+        .setDescription(
+          `Raid hour akan dimulai dalam **30 menit** (jam 20.00 WIB).\n\n` +
+          `Persiapkan kartu terkuat kamu dan bersiaplah untuk menyerang boss!\n` +
+          `Gunakan \`${process.env.PREFIX || "!"}raid\` untuk berpartisipasi.`
+        )
+        .setFooter({ text: "Dangodeck Card Game - Raid Notification" })
+        .setTimestamp();
+
+      for (const channelId of channelIds) {
+        const channel = guild.channels.cache.get(channelId);
+        if (!channel?.isTextBased() || !channel.send) continue;
+        try {
+          await channel.send({ embeds: [embed] });
+        } catch (error) {
+          console.error(`Gagal mengirim notifikasi raid di channel ${channelId}:`, getErrorMessage(error));
+        }
+      }
+    } catch (error) {
+      console.error(`Gagal mengirim notifikasi raid di server ${guild.name}:`, getErrorMessage(error));
+    }
+  }
+}
+
+const raidNotificationJob = cron.schedule("0 30 19 * * *", sendRaidNotification, {
+  scheduled: true,
+  timezone: "Asia/Jakarta",
+});
+
+raidNotificationJob.start();
+
+const dailyRaidJob = cron.schedule("0 0 20 * * *", startDailyCardGameRaids, {
+  scheduled: true,
+  timezone: "Asia/Jakarta",
+});
+
+dailyRaidJob.start();
+console.log(" Cron job untuk raid harian Dangodeck (20:00 WIB) telah diaktifkan");
 app.set("view engine", "ejs");
 app.set("views", path.join(__dirname, "views"));
 app.use(express.static("public"));

@@ -14,31 +14,37 @@ function buildGuideEmbed(prefix, requestedBy) {
                 name: "Mulai Bermain",
                 value:
                     `\`${prefix}daily\` - Ambil gold, ticket, dan material setiap 24 jam.\n` +
-                    `\`${prefix}gacha\` - Gunakan 1 ticket untuk mendapatkan kartu random.\n` +
+                    `\`${prefix}gacha\` - Gacha kartu random.\n` +
+                    `  🎟️ **Gratis 1x/hari:** Gunakan 1 ticket (dari daily).\n` +
+                    `  💰 **Premium:** Gunakan 200 gold untuk gacha unlimited.\n` +
                     `\`${prefix}inventory\` - Lihat koleksi, inventory ID, progression, dan power kartu.`,
             },
             {
                 name: "Upgrade Kartu",
                 value:
                     `\`${prefix}upgrade <inventory-id> [jumlah-level]\` - Naikkan level kartu menggunakan gold dan material. Maksimal 10 level sekali upgrade.\n` +
-                    `Contoh: \`${prefix}upgrade a1b2c3d4 5\`\n\n` +
+                    `Contoh: \`${prefix}upgrade a1b2c3d4 5\`\n` +
+                    `**Biaya:** Gold = (level saat ini) × 25 per level | Material = 10 per level\n` +
+                    `Contoh: Lv 50→51 = 50×25 = 1.250 gold + 10 material\n\n` +
                     `\`${prefix}evolve <inventory-id>\` - Naikkan evo kartu sampai Evo 3. Membutuhkan level 30 lalu 70.\n` +
                     `\`${prefix}ascend <inventory-id>\` - Naikkan ascension sampai 5. Membutuhkan minimal level 50.`,
             },
             {
                 name: "Battle dan Raid",
                 value:
-                    `\`${prefix}battle @user\` - Duel melawan kartu terkuat pemain lain. Pemenang mendapat gold dan material. Cooldown 5 menit.\n` +
-                    `\`${prefix}raid\` - Serang boss bersama pemain satu server menggunakan kartu terkuat. Cooldown serangan 1 menit.`,
+                    `\`${prefix}battle @user\` - Duel kartu dengan dialog AI! Narasi AI menjelaskan alasan menang/kalah. Pemenang +300 gold, +20 material. Cooldown 5 menit.\n` +
+                    `\`${prefix}raid\` - Serang boss bersama dengan kartu terkuat. Cooldown antaran 15 detik. Notif otomatis jam 19:30 WIB.\n` +
+                    "**Difficulty Raid:** Easy (30K) | Normal (50K) | Hard (75K). Notif raid dimulai jam **19:30 WIB**, boss spawn jam **20:00 WIB** setiap hari.",
             },
             {
                 name: "Marketplace",
                 value:
-                    `\`${prefix}market\` - Lihat kartu yang dijual.\n` +
-                    `\`${prefix}market sell <inventory-id> <harga>\` - Jual kartu.\n` +
-                    `\`${prefix}market buy <listing-id>\` - Beli kartu pemain lain.\n` +
-                    `\`${prefix}market cancel <listing-id>\` - Batalkan listing milikmu.\n` +
-                    "Penjual menerima 95% harga setelah kartu terjual.",
+                    `\`${prefix}market list\` - Lihat semua kartu dengan detail stat, level, power, gambar.\n` +
+                    `\`${prefix}market sell <id> <harga>\` - Jual kartu dengan harga custom.\n` +
+                    `\`${prefix}market quick <id> [harga]\` - Jual cepat (harga otomatis atau custom).\n` +
+                    `\`${prefix}market buy <id>\` - Beli kartu pemain lain.\n` +
+                    `\`${prefix}market cancel <id>\` - Batalkan listing milikmu.\n` +
+                    "Penjual menerima 95% harga. Market list ada pagination ⬅️➡️",
             },
             {
                 name: "Database Dangodeck",
@@ -46,7 +52,7 @@ function buildGuideEmbed(prefix, requestedBy) {
                     `\`${prefix}card detail <card-id>\` - Lihat detail kartu Dangodeck.\n` +
                     `\`${prefix}card stats <card-id> rarity=rare level=50 evo=2 ascension=1\` - Simulasikan stats dan power.\n` +
                     `\`${prefix}card search <nama>\` - Cari kartu berdasarkan nama.\n` +
-                    `\`${prefix}card list page=1 limit=20\` - Jelajahi database kartu.`,
+                    `\`${prefix}card list page=1 limit=20\` - Jelajahi database kartu (dengan pagination ⬅️➡️)`,
             },
             {
                 name: "Tips",
@@ -87,22 +93,28 @@ module.exports = {
                     `Pastikan bot memiliki izin Send Messages dan Embed Links, lalu gunakan \`${prefix}cardgame panel\`.`
                 );
             }
-            return message.reply(`Dangodeck Card Game aktif di ${target}. Panel panduan command sudah dikirim ke channel tersebut.`);
+            return message.reply(`Dangodeck Card Game ditambahkan di ${target}. Channel card game lain di server ini tetap aktif.`);
         }
         if (sub === "disable") {
             if (!isAdmin) return message.reply("Hanya admin yang bisa menonaktifkan card game.");
-            cardGame.disableChannel(message.guild.id);
-            return message.reply("Dangodeck Card Game dinonaktifkan.");
+            const target = message.mentions.channels.first() ||
+                (String(args[1] || "").toLowerCase() === "all" ? null : message.channel);
+            cardGame.disableChannel(message.guild.id, target?.id);
+            return message.reply(target
+                ? `Dangodeck Card Game dinonaktifkan di ${target}.`
+                : "Dangodeck Card Game dinonaktifkan di semua channel server ini.");
         }
         if (sub === "status") {
-            const channelId = cardGame.getChannelId(message.guild.id);
-            return message.reply(channelId ? `Dangodeck Card Game aktif di <#${channelId}>.` : `Card game belum aktif. Gunakan \`${prefix}cardgame set #channel\`.`);
+            const channelIds = cardGame.getChannelIds(message.guild.id);
+            return message.reply(channelIds.length
+                ? `Dangodeck Card Game aktif di ${channelIds.map((id) => `<#${id}>`).join(", ")}.`
+                : `Card game belum aktif. Gunakan \`${prefix}cardgame set #channel\`.`);
         }
         if (["panel", "guide", "tutorial", "tutor"].includes(sub)) {
             if (!isAdmin) return message.reply("Hanya admin yang bisa mengirim ulang panel card game.");
-            const channelId = cardGame.getChannelId(message.guild.id);
             const target = message.mentions.channels.first() ||
-                (channelId ? message.guild.channels.cache.get(channelId) : null);
+                (cardGame.getChannelIds(message.guild.id).includes(message.channel.id) ? message.channel : null) ||
+                message.guild.channels.cache.get(cardGame.getChannelId(message.guild.id));
             if (!target) return message.reply(`Aktifkan channel dahulu dengan \`${prefix}cardgame set #channel\`.`);
             await sendGuide(target, prefix, message.author.tag);
             return message.reply(`Panel panduan card game dikirim ke ${target}.`);
