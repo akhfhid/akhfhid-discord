@@ -46,6 +46,59 @@ A robust, modular, and feature-rich Discord bot built with **Node.js** and **Dis
 | **Automation**             | Scheduled Messages    | Configure daily automated messages (e.g., morning greetings) with `!setschedule`.                       |
 |                            | Welcome System        | Customizable welcome messages for new members.                                                          |
 
+## Dangodeck Card Integration
+
+Card data is provided by the Dangodeck API. An admin must activate one card-game
+channel before any card command can be used:
+
+```text
+!cardgame set #card-game
+!cardgame status
+!cardgame panel
+!cardgame disable
+
+!gacha
+!inventory
+!daily
+!battle @user
+!raid
+!upgrade <inventory-id> [level]
+!evolve <inventory-id>
+!ascend <inventory-id>
+!market
+!market sell <inventory-id> <price>
+!market buy <listing-id>
+
+!card random
+!card detail <id>
+!card stats <id> rarity=ultra_rare level=100 evo=3 ascension=5
+!card search <name> limit=20
+!card list page=1 limit=20 element=Water anime=...
+```
+
+Every player starts with 1,000 gold, 5 gacha tickets, and 100 materials. Gacha
+cards are saved permanently per server in `data/cardGame.json`. Upgrade,
+evolution, ascension, PvP battle, cooperative raid, daily rewards, and the
+server marketplace all use this saved inventory.
+
+After `!cardgame set #card-game` succeeds, the bot automatically posts a
+complete command tutorial in the selected channel. Admins can post it again
+later with `!cardgame panel`.
+
+The API client caches responses, retries temporary failures, handles timeouts
+and HTTP 429 responses, and queues requests at a maximum of 120 requests per
+minute. Optional environment configuration:
+
+```env
+DANGODECK_API_URL=https://dangodeck.nett.to/api
+DANGODECK_TIMEOUT_MS=10000
+DANGODECK_MAX_RETRIES=3
+DANGODECK_RATE_LIMIT=120
+DANGODECK_CONCURRENCY=5
+DANGODECK_CACHE_TTL_MS=300000
+DANGODECK_STATS_CACHE_TTL_MS=60000
+```
+
 ## AI Image Transformation (img2img)
 
 The `!img2img` command allows users to transform images into various artistic styles using AI.

@@ -1,0 +1,36 @@
+{
+  "guilds": {
+    "1412474885225054394": {
+      "channelId": "1512011720326119515",
+      "players": {
+        "870115369174564914": {
+          "gold": 1750,
+          "tickets": 7,
+          "materials": 175,
+          "cards": [
+            {
+              "instanceId": "775621e1",
+              "cardId": 1016,
+              "name": "Yoichi Nagumo",
+              "anime": "Sakamoto Days",
+              "element": "Neutral",
+              "image": "https://ik.imagekit.io/anigamedb/cards/1016_Yoichi_Nagumo.png",
+              "rarity": "base",
+              "level": 71,
+              "evo": 1,
+              "ascension": 3,
+              "obtainedAt": 1780562228023
+            }
+          ],
+          "dailyAt": 1780562220219,
+          "battleAt": 0,
+          "raidAt": 0,
+          "wins": 0,
+          "losses": 0
+        }
+      },
+      "market": [],
+      "raid": null
+    }
+  }
+}
